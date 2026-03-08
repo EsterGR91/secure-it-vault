@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<!-- Permite compatibilidad con caracteres especiales -->
+
+<title>Secure IT Vault</title>
+<!-- Título principal del sistema -->
+
+<style>
+
+/* Estilo general */
+body{
+    margin:0;
+    font-family:Segoe UI;   /* Fuente moderna y profesional */
+    background:#0f172a;     /* Fondo oscuro corporativo */
+    color:white;
+}
+
+/* Barra superior */
+.header{
+    background:#1e293b;     /* Fondo del header */
+    padding:15px 25px;
+    display:flex;
+    justify-content:space-between; /* Logo a la izquierda, botón a la derecha */
+    align-items:center;
+}
+
+/* Logo o nombre del sistema */
+.logo{
+    font-size:18px;
+    font-weight:bold;
+}
+
+/* Botón de cerrar sesión */
+.logout{
+    background:#ef4444;     /* Rojo para acción crítica */
+    border:none;
+    padding:8px 15px;
+    border-radius:6px;
+    color:white;
+    cursor:pointer;
+}
+
+/* Contenedor principal */
+.container{
+    padding:40px;
+}
+
+/* Contenedor de tarjetas */
+.cards{
+    display:flex;           /* Alineación horizontal */
+    gap:20px;               /* Espacio entre tarjetas */
+}
+
+/* Tarjeta individual */
+.card{
+    background:#1e293b;
+    padding:25px;
+    border-radius:10px;
+    width:200px;
+    text-align:center;
+}
+
+/* Título dentro de la tarjeta */
+.card h3{
+    margin:0;
+    font-size:26px;
+}
+
+/* Descripción */
+.card p{
+    color:#94a3b8;          /* Gris suave */
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- Barra superior -->
+<div class="header">
+
+<div class="logo">
+ Secure IT Vault
+</div>
+
+<button class="logout">
+Logout
+</button>
+
+</div>
+
+<!-- Contenido principal -->
+<div class="container">
+
+<h2>Welcome Administrator</h2>
+<!-- Mensaje dinámico según el rol -->
+
+<div class="cards">
+
+<!-- Gestión de usuarios -->
+<div class="card">
+<h3>Users</h3>
+<p>Manage users</p>
+</div>
+
+<!-- Gestión de credenciales -->
+<div class="card">
+<h3>Passwords</h3>
+<p>Vault entries</p>
+</div>
+
+<!-- Auditoría -->
+<div class="card">
+<h3>Audit</h3>
+<p>Security logs</p>
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

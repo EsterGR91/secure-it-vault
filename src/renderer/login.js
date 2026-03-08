@@ -1,48 +1,40 @@
-/**
- * Función de login temporal
- * Valida credenciales estáticas para pruebas
- */
-function login() {
+async function login() {
 
-  // Obtiene los valores ingresados en los campos
-  const user = document.getElementById('username').value;
-  const pass = document.getElementById('password').value;
+  // Obtengo los valores ingresados en los campos del formulario
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
 
-  // Cuenta maestra temporal (solo para pruebas)
-  if (user === "admin" && pass === "EastWest123") {
+  // Evita login con campos vacíos
+  // Si el usuario no escribe username o password,
+  // muestro un mensaje y detengo el proceso
+  if (!username || !password) {
 
-    // Redirige a la página principal del sistema
-    window.location.href = "index.html";
+    document.getElementById("error").innerText =
+      "Ingrese usuario y contraseña";
 
-  } else {
-
-    // Muestra mensaje si las credenciales no coinciden
-    alert("Credenciales incorrectas");
+    return;
   }
-}
 
+  try {
 
-/**
- * Mostrar / ocultar contraseña
- */
-function togglePassword() {
+    // Llamo a la función login expuesta desde el preload
+    // Esto envía las credenciales al proceso main para validación segura
+    const result = await window.api.login(username, password);
 
-  const input = document.getElementById("password");
+    if (result) {
 
-  // Cambia el tipo del input entre password y text
-  if (input.type === "password") {
-    input.type = "text";
-  } else {
-    input.type = "password";
+      // Si la autenticación es correcta,
+      // redirijo al usuario al codigo de verificacion
+      window.location.href = "enter-code.html";
+    }
+
+  } catch (error) {
+
+    // Si ocurre un error (usuario no encontrado o contraseña incorrecta),
+    // muestro mensaje en pantalla
+    document.getElementById("error").innerText =
+      "Credenciales incorrectas";
+
   }
-}
 
-
-/**
- * Acción para recuperación de contraseña
- */
-function forgotPassword() {
-
-  // Mensaje informativo (funcionalidad futura)
-  alert("Contacte al administrador del sistema.");
 }

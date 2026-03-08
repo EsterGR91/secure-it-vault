@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
+  <!-- =====================================================
+       CONFIGURACIÓN BÁSICA DEL DOCUMENTO
+       ===================================================== -->
+
   <meta charset="UTF-8" />
+
+  <!-- Título que aparece en la ventana de Electron -->
   <title>Secure IT Vault - Login</title>
 
+
   <style>
+
     /* =====================================================
        CONFIGURACIÓN GLOBAL
+       Define el comportamiento base de todos los elementos
        ===================================================== */
 
     * {
@@ -14,72 +25,140 @@
     }
 
     body {
+
+      /* Fuente principal del sistema */
       font-family: 'Segoe UI', Arial, sans-serif;
+
+      /* Fondo oscuro estilo ciberseguridad */
       background: #0f172a;
+
+      /* Color base del texto */
       color: #fff;
+
+      /* Centrado vertical y horizontal del login */
       display: flex;
       justify-content: center;
       align-items: center;
+
+      /* Altura completa de la pantalla */
       height: 100vh;
+
+      /* Elimina márgenes por defecto del navegador */
       margin: 0;
     }
+
 
     /* =====================================================
        CONTENEDOR PRINCIPAL DEL LOGIN
        ===================================================== */
 
     .login-box {
+
+      /* Ancho del panel */
       width: 360px;
+
+      /* Espacio interno */
       padding: 40px;
+
+      /* Fondo del panel */
       background: #020617;
+
+      /* Bordes redondeados */
       border-radius: 12px;
+
+      /* Centrado del contenido */
       text-align: center;
+
+      /* Sombra estilo glow tecnológico */
       box-shadow: 0 0 40px rgba(0,195,255,0.15);
     }
 
+
     /* =====================================================
-       LOGO SUPERIOR
+       LOGO SUPERIOR DEL SISTEMA
        ===================================================== */
 
     .logo {
-      width: 180px;      /* Tamaño controlado del logo */
+
+      /* Controla el tamaño del logo */
+      width: 180px;
+
+      /* Separación inferior */
       margin-bottom: 20px;
     }
 
+
+    /* =====================================================
+       TÍTULO PRINCIPAL
+       ===================================================== */
+
     h2 {
+
+      /* Color azul institucional */
       color: #38bdf8;
+
+      /* Separación inferior */
       margin-bottom: 25px;
     }
 
+
     /* =====================================================
-       INPUTS
+       CONTENEDOR DE INPUTS
        ===================================================== */
 
     .input-container {
+
       position: relative;
       width: 100%;
       margin-top: 14px;
     }
 
+
+    /* =====================================================
+       CAMPOS DE ENTRADA
+       ===================================================== */
+
     input {
+
       width: 100%;
+
+      /* Espacio interno del campo */
       padding: 12px;
+
+      /* Fondo oscuro */
       background: #1e293b;
+
+      /* Sin bordes visibles */
       border: none;
+
+      /* Bordes redondeados */
       border-radius: 8px;
+
+      /* Color del texto */
       color: white;
+
       font-size: 14px;
+
       outline: none;
 
+      /* Evita estilos automáticos del navegador */
       -webkit-appearance: none;
       appearance: none;
     }
 
+
+    /* Efecto cuando el usuario selecciona el input */
     input:focus {
+
       box-shadow: 0 0 0 2px #00c6ff;
     }
 
-    /* Elimina iconos internos de Chromium */
+
+    /* =====================================================
+       ELIMINA ICONOS AUTOMÁTICOS DE CHROMIUM
+       (importante en aplicaciones Electron)
+       ===================================================== */
+
     input::-ms-reveal,
     input::-ms-clear {
       display: none;
@@ -87,130 +166,240 @@
 
     input::-webkit-credentials-auto-fill-button,
     input::-webkit-password-toggle-button {
+
       display: none !important;
       visibility: hidden;
       pointer-events: none;
     }
 
+
     /* =====================================================
-       OJITO PERSONALIZADO
+       ICONO PARA MOSTRAR / OCULTAR CONTRASEÑA
        ===================================================== */
 
     .toggle-password {
+
       position: absolute;
       right: 12px;
       top: 50%;
+
       transform: translateY(-50%);
+
       cursor: pointer;
+
       font-size: 16px;
+
       color: #94a3b8;
+
       user-select: none;
     }
 
     .toggle-password:hover {
+
       color: #38bdf8;
     }
 
+
     /* =====================================================
-       BOTÓN LOGIN
+       BOTÓN DE LOGIN
        ===================================================== */
 
     .login-btn {
+
       width: 100%;
+
       margin-top: 20px;
+
       padding: 12px;
+
+      /* Gradiente azul tecnológico */
       background: linear-gradient(90deg, #1f8ef1, #00c6ff);
+
       border: none;
+
       border-radius: 8px;
+
       color: white;
+
       font-weight: bold;
+
       cursor: pointer;
+
       font-size: 15px;
     }
 
     .login-btn:hover {
+
       opacity: 0.9;
     }
 
+
+    /* =====================================================
+       TEXTO DE RECUPERACIÓN DE CONTRASEÑA
+       ===================================================== */
+
     .forgot {
+
       margin-top: 15px;
+
       font-size: 13px;
+
       color: #38bdf8;
+
       cursor: pointer;
     }
 
     .forgot:hover {
+
       text-decoration: underline;
     }
 
+
+    /* =====================================================
+       MENSAJES DE ERROR
+       ===================================================== */
+
     .error {
+
       color: #f87171;
+
       margin-top: 10px;
+
       font-size: 13px;
     }
 
   </style>
+
 </head>
+
+
 
 <body>
 
+
+  <!-- =====================================================
+       PANEL PRINCIPAL DEL LOGIN
+       Contiene logo, inputs y acciones de autenticación
+       ===================================================== -->
+
   <div class="login-box">
+
 
     <!-- =====================================================
          LOGO INSTITUCIONAL
          Representa la identidad corporativa del sistema
          ===================================================== -->
 
-<img src="assets/logo.jpeg" alt="East West Logo" class="logo">
+    <img src="assets/logo.jpeg" alt="East West Logo" class="logo">
+
+
+
+    <!-- =====================================================
+         TÍTULO DEL SISTEMA
+         ===================================================== -->
 
     <h2>IT Vault Access</h2>
 
-    <!-- =========================
-         CAMPO USUARIO
-         ========================= -->
+
+
+    <!-- =====================================================
+         CAMPO DE USUARIO
+         ===================================================== -->
 
     <div class="input-container">
+
       <input id="username"
              type="text"
              placeholder="Usuario"
              autocomplete="off" />
+
     </div>
 
-    <!-- =========================
-         CAMPO CONTRASEÑA
-         ========================= -->
+
+
+    <!-- =====================================================
+         CAMPO DE CONTRASEÑA
+         ===================================================== -->
 
     <div class="input-container">
+
       <input id="password"
              type="password"
              placeholder="Contraseña"
              autocomplete="off" />
 
+      <!-- Botón para mostrar / ocultar contraseña -->
+
       <span class="toggle-password" onclick="togglePassword()">👁</span>
+
     </div>
 
-    <!-- BOTÓN LOGIN -->
-    <button class="login-btn" onclick="login()">Ingresar</button>
 
-    <!-- RECUPERACIÓN -->
+
+    <!-- =====================================================
+         BOTÓN DE AUTENTICACIÓN
+         Ejecuta la función login() definida en login.js
+         ===================================================== -->
+
+    <button class="login-btn" onclick="login()">
+
+      Ingresar
+
+    </button>
+
+
+
+    <!-- =====================================================
+         OPCIÓN DE RECUPERACIÓN DE CONTRASEÑA
+         ===================================================== -->
+
     <div class="forgot" onclick="forgotPassword()">
+
       ¿Olvidé mi contraseña?
+
     </div>
+
+
+
+    <!-- =====================================================
+         CONTENEDOR DE MENSAJES DE ERROR
+         ===================================================== -->
 
     <div id="error" class="error"></div>
 
+
   </div>
 
-  <!-- Script toggle -->
+
+
+  <!-- =====================================================
+       SCRIPT PARA MOSTRAR / OCULTAR CONTRASEÑA
+       ===================================================== -->
+
   <script>
+
     function togglePassword() {
+
       const passwordInput = document.getElementById("password");
+
       passwordInput.type =
-        passwordInput.type === "password" ? "text" : "password";
+        passwordInput.type === "password"
+          ? "text"
+          : "password";
     }
+
   </script>
+
+
+
+  <!-- =====================================================
+       SCRIPT PRINCIPAL DEL LOGIN
+       Contiene la lógica de autenticación
+       ===================================================== -->
 
   <script src="login.js"></script>
 
+
 </body>
+
 </html>

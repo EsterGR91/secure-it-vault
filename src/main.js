@@ -3,80 +3,107 @@
 // ===============================
 
 const { app, BrowserWindow, ipcMain } = require('electron');
-// Importa los módulos principales de Electron
-
 const path = require('path');
-// Permite construir rutas seguras y compatibles con cualquier sistema operativo
 
+// Repositorios / servicios
 const credentialsRepository = require('./db/credentials.repository');
-// Importa el repositorio encargado de interactuar con la base de datos
+const verificationRepository = require('./db/verification.repository'); // ← NUEVO
 
+const { login } = require('./services/auth.service');
+
+
+// ===============================
+// VARIABLE TEMPORAL DE SESIÓN MFA
+// (user pendiente de verificar código)
+// ===============================
+let pendingUserId = null; // ← NUEVO
 
 
 // ===============================
 // CONFIGURACIÓN GLOBAL DE ESCALADO
 // ===============================
-
-// Fuerza el factor de escala a 1 para evitar diferencias
-// de ancho causadas por escalado de Windows (125%, 150%, etc.)
 app.commandLine.appendSwitch("force-device-scale-factor", "1");
 
 
-
 // ===============================
-// CREACIÓN DE VENTANA PRINCIPAL
+// CREACIÓN DE LA VENTANA PRINCIPAL
 // ===============================
-
 function createWindow() {
 
-  // Crea la ventana principal de la aplicación
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
-
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      // Archivo preload que expone APIs seguras al frontend
-
       contextIsolation: true,
-      // Aísla el contexto del renderer para mayor seguridad
-
       nodeIntegration: false,
-      // Evita que el frontend tenga acceso directo a Node.js
-
       zoomFactor: 1
-      // Fuerza el zoom interno del renderer a 100%
     }
   });
 
-  // Refuerza el zoom en 100%
   win.webContents.setZoomFactor(1);
 
-  // 🔥 CAMBIO IMPORTANTE 🔥
-  // Antes se estaba cargando index.html.
-  // Ahora se carga login.html, que es el archivo que estoy editando.
+  // Inicia siempre en login
   win.loadFile(path.join(__dirname, 'renderer/login.html'));
-
 }
-
 
 
 // ===============================
 // MANEJO DE EVENTOS IPC
 // ===============================
 
-// Maneja la solicitud del renderer para listar credenciales
-ipcMain.handle('list-credentials', async (event, vaultId) => {
+/**
+ * LOGIN
+ * Valida usuario y contraseña.
+ * Si es correcto, el servicio ya generó y envió el código MFA.
+ * Aquí guardamos el userId para poder verificar el código luego.
+ */
+ipcMain.handle('login', async (event, username, password) => {
+  try {
 
-  return await credentialsRepository.getCredentialsByVault(vaultId);
+    const result = await login(username, password);
 
+    // Guardamos el userId para el paso de verificación MFA
+    pendingUserId = result.id; // ← NUEVO
+
+    return result;
+
+  } catch (error) {
+    throw error;
+  }
 });
 
+
+/**
+ * VERIFY CODE (MFA)
+ * Valida el código de verificación ingresado por el usuario.
+ */
+ipcMain.handle('verify-code', async (event, code) => {
+
+  if (!pendingUserId) {
+    return false;
+  }
+
+  const valid = await verificationRepository.verifyCode(pendingUserId, code);
+
+  // Si fue válido limpiamos la variable
+  if (valid) {
+    pendingUserId = null;
+  }
+
+  return valid;
+});
+
+
+/**
+ * LISTAR CREDENCIALES
+ */
+ipcMain.handle('list-credentials', async (event, vaultId) => {
+  return await credentialsRepository.getCredentialsByVault(vaultId);
+});
 
 
 // ===============================
 // INICIO DE LA APLICACIÓN
 // ===============================
-
-// Inicia la aplicación cuando Electron está listo
 app.whenReady().then(createWindow);

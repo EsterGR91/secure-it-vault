@@ -31,12 +31,6 @@ async function findUserByUsername(username) {
   return rows[0];
 }
 
-module.exports = {
-  createUser,
-  findUserByUsername,
-  updateLastLogin
-}; // Exporta las funciones del modelo de usuarios
-
 async function updateLastLogin(userId) {
   // Consulta SQL para actualizar la fecha y hora del último inicio de sesión
   const sql = `
@@ -48,3 +42,10 @@ async function updateLastLogin(userId) {
   // Ejecuta la actualización usando el ID del usuario
   await pool.execute(sql, [userId]);
 }
+
+// Exporta las funciones del repositorio de usuarios
+module.exports = {
+  createUser,
+  findUserByUsername,
+  updateLastLogin
+};
