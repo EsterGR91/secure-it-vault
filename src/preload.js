@@ -1,9 +1,11 @@
-const { contextBridge, ipcRenderer } = require('electron'); 
-// Importa herramientas de Electron para comunicación segura entre frontend y backend
+const { contextBridge, ipcRenderer } = require('electron');
+// Importa herramientas para comunicación segura entre renderer y main
 
 contextBridge.exposeInMainWorld('api', {
-  // Expone la función login al frontend de forma segura
-  login: (username, password) =>
-    ipcRenderer.invoke('login', { username, password }) 
-    // Envía las credenciales al proceso principal usando IPC
+
+  // Solicita al proceso principal la lista de credenciales
+  // Usa IPC para mantener separación entre frontend y backend
+  listCredentials: (vaultId) => 
+    ipcRenderer.invoke('list-credentials', vaultId),
+
 });

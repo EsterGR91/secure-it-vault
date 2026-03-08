@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"> <!-- Soporte para caracteres especiales -->
+  <title>IT Vault Login</title> <!-- Título de la ventana -->
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif; /* Fuente moderna */
+      background-color: #0b0b0b;           /* Fondo oscuro */
+      display: flex;
+      justify-content: center;             /* Centrado horizontal */
+      align-items: center;                 /* Centrado vertical */
+      height: 100vh;                       /* Altura completa de pantalla */
+      color: white;
+    }
+
+    .login-box {
+      background-color: #151515;           /* Caja principal */
+      padding: 40px;
+      border-radius: 12px;                 /* Bordes redondeados */
+      width: 360px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(0, 170, 255, 0.15); /* Efecto glow azul */
+      transition: 0.3s;
+    }
+
+    .login-box:hover {
+      box-shadow: 0 0 60px rgba(0, 170, 255, 0.25); /* Efecto hover */
+    }
+
+    img {
+      width: 180px;                        /* Tamaño del logo */
+      margin-bottom: 25px;
+    }
+
+    h2 {
+      margin-bottom: 25px;
+      color: #4cc3ff;                      /* Azul corporativo */
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      background: #1f1f1f;                 /* Fondo oscuro del input */
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 14px;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    input:focus {
+      box-shadow: 0 0 8px #00c6ff; /* Resalta el campo activo */
+    }
+
+    .password-container {
+      position: relative; /* Permite posicionar el icono dentro */
+    }
+
+    .password-container input {
+      padding-right: 40px; /* Espacio para el icono del ojo */
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 16px;
+      color: #aaa;
+      user-select: none;
+    }
+
+    .toggle-password:hover {
+      color: #4cc3ff; /* Cambio de color al pasar el mouse */
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(90deg, #1f8ef1, #00c6ff); /* Gradiente azul */
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-1px); /* Pequeño efecto al pasar mouse */
+      opacity: 0.95;
+    }
+
+    .forgot-password {
+      margin-top: 15px;
+      font-size: 13px;
+      color: #4cc3ff;
+      cursor: pointer;
+    }
+
+    .forgot-password:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-box">
+
+    <!-- Logo corporativo (ubicado en renderer/assets/logo.jpeg) -->
+    <img src="assets/logo.jpeg" alt="East West Logo">
+
+    <h2>IT Vault Access</h2> <!-- Título del acceso -->
+
+    <!-- Campo de usuario -->
+    <input type="text" id="username" placeholder="Usuario">
+
+    <!-- Campo de contraseña con botón para mostrar/ocultar -->
+    <div class="password-container">
+      <input type="password" id="password" placeholder="Contraseña">
+      <span class="toggle-password" onclick="togglePassword()">👁</span>
+    </div>
+
+    <!-- Botón que ejecuta la función login() -->
+    <button onclick="login()">Ingresar</button>
+
+    <!-- Enlace para recuperación de contraseña -->
+    <p class="forgot-password" onclick="forgotPassword()">
+      ¿Olvidé mi contraseña?
+    </p>
+
+  </div>
+
+  <!-- Archivo JS que contiene la lógica de autenticación -->
+  <script src="login.js"></script>
+</body>
+</html>
