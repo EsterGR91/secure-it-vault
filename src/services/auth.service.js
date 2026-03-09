@@ -1,24 +1,27 @@
-// Importa la conexión a la base de datos
+// =====================================================
+// IMPORTACIONES
+// =====================================================
+
+// Conexión a base de datos
 const pool = require('../db/connection');
 
-// Importa Argon2 para verificar contraseñas
+// Librería para verificar contraseñas
 const argon2 = require('argon2');
 
-// Importa generador de códigos de verificación
+// Generador de códigos MFA
 const { generateVerificationCode } = require('../security/code-generator');
 
-// Importa servicio de envío de correo
+// Servicio de envío de correo
 const { sendVerificationEmail } = require('../security/email');
 
-// Importa funciones para guardar y validar códigos
-const verificationRepository =  require('../db/verification.repository');
+// Repositorio de códigos de verificación
+const verificationRepository = require('../db/verification.repository');
 
 
-/**
- * Servicio de autenticación
- * Valida usuario y contraseña
- * Si son correctos genera un código MFA
- */
+// =====================================================
+// LOGIN CON MFA
+// =====================================================
+
 async function login(username, password) {
 
   console.log("Usuario ingresado:", username);
@@ -45,34 +48,93 @@ async function login(username, password) {
     password
   );
 
-  // Si la contraseña es incorrecta
   if (!validPassword) {
     throw new Error("Contraseña incorrecta");
   }
 
   // =====================================================
-  // MFA - GENERACIÓN DE CÓDIGO
+  // GENERACIÓN DE CÓDIGO MFA
   // =====================================================
 
-  // Genera código de verificación de 6 dígitos
   const code = generateVerificationCode();
 
   console.log("Código generado:", code);
 
-  // Guarda el código en base de datos
+  // Guarda código en DB
   await verificationRepository.saveCode(user.id, code);
 
-  // Envía el código al correo del usuario
+  // Envía correo al usuario
   await sendVerificationEmail(user.email, code);
 
-  // Devuelve información mínima al frontend
   return {
     id: user.id,
     username: user.username,
     mfa_required: true
   };
+}
+
+
+// =====================================================
+// RECUPERACIÓN DE CONTRASEÑA
+// =====================================================
+
+async function recoverPassword(userInput){
+
+  console.log("Solicitud de recuperación:", userInput);
+
+  // =====================================================
+  // BUSCA USUARIO POR USERNAME O EMAIL
+  // =====================================================
+
+  const [rows] = await pool.execute(
+    `SELECT * FROM users 
+     WHERE username = ? 
+     OR email = ?
+     LIMIT 1`,
+    [userInput, userInput]
+  );
+
+  // Si no existe usuario
+  if(rows.length === 0){
+    throw new Error("Usuario no encontrado");
+  }
+
+  const user = rows[0];
+
+  console.log("Usuario encontrado:", user.username);
+
+
+  // =====================================================
+  // GENERA CÓDIGO DE RECUPERACIÓN
+  // =====================================================
+
+  const code = generateVerificationCode();
+
+  console.log("Código recuperación:", code);
+
+
+  // Guarda código en base de datos
+  await verificationRepository.saveCode(user.id, code);
+
+
+  // Envía correo al usuario
+  await sendVerificationEmail(user.email, code);
+
+
+  // Devuelve resultado al frontend
+  return {
+    success: true,
+    userId: user.id
+  };
 
 }
 
-// Exporta función login
-module.exports = { login };
+
+// =====================================================
+// EXPORTACIONES
+// =====================================================
+
+module.exports = {
+  login,
+  recoverPassword
+};

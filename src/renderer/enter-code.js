@@ -1,7 +1,19 @@
 /**
- * Maneja el comportamiento de los inputs OTP
- * - Avanza automáticamente al siguiente
- * - Permite borrar hacia atrás
+ * =====================================================
+ * DETECTAR DESDE QUÉ FLUJO VIENE EL USUARIO
+ * =====================================================
+ * login     -> ir a dashboard
+ * recovery  -> ir a reset-password
+ */
+
+const params = new URLSearchParams(window.location.search);
+const mode = params.get("mode");
+
+
+/**
+ * =====================================================
+ * MANEJO DE INPUTS OTP
+ * =====================================================
  */
 
 const inputs = document.querySelectorAll(".otp");
@@ -13,14 +25,14 @@ inputs.forEach((input, index) => {
     // Solo números
     input.value = input.value.replace(/[^0-9]/g, "");
 
-    // Si escribe algo pasa al siguiente
+    // Avanza al siguiente input
     if (input.value && index < inputs.length - 1) {
       inputs[index + 1].focus();
     }
 
   });
 
-  // Permite regresar con backspace
+  // Permite borrar hacia atrás
   input.addEventListener("keydown", (e) => {
 
     if (e.key === "Backspace" && !input.value && index > 0) {
@@ -33,19 +45,25 @@ inputs.forEach((input, index) => {
 
 
 /**
- * Verifica el código MFA
+ * =====================================================
+ * VERIFICAR CÓDIGO MFA
+ * =====================================================
  */
+
 async function verifyCode() {
 
   let code = "";
 
+  // Une los 6 inputs OTP
   inputs.forEach(input => {
     code += input.value;
   });
 
   if (code.length !== 6) {
+
     alert("Ingrese el código completo");
     return;
+
   }
 
   try {
@@ -54,8 +72,23 @@ async function verifyCode() {
 
     if (result) {
 
-      // Si el código es válido entra al sistema
-      window.location.href = "dashboard.html";
+      /**
+       * =====================================================
+       * REDIRECCIÓN SEGÚN EL FLUJO
+       * =====================================================
+       */
+
+      if(mode === "recovery"){
+
+        // Si viene de recuperar contraseña
+        window.location.href = "reset-password.html";
+
+      }else{
+
+        // Si viene de login normal
+        window.location.href = "dashboard.html";
+
+      }
 
     } else {
 
