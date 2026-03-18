@@ -3,69 +3,233 @@
 // ===============================
 
 const { app, BrowserWindow, ipcMain } = require('electron');
-// Importa los módulos principales de Electron
-
 const path = require('path');
-// Permite construir rutas seguras y compatibles con cualquier sistema operativo
+
+
+// ===============================
+// IMPORTACIÓN DE REPOSITORIOS
+// ===============================
 
 const credentialsRepository = require('./db/credentials.repository');
-// Importa el repositorio encargado de interactuar con la base de datos
+const verificationRepository = require('./db/verification.repository');
 
+
+// ===============================
+// IMPORTACIÓN DE SERVICIOS
+// ===============================
+
+const { login } = require('./services/auth.service');
+
+
+// ===============================
+// IMPORTACIÓN DE UTILIDADES
+// ===============================
+
+const pool = require('./db/connection');
+const { generateVerificationCode } = require('./security/code-generator');
+const { sendVerificationEmail } = require('./security/email');
+
+// IMPORTAMOS HASH DE CONTRASEÑA
+const { hashPassword } = require('./security/hash');
+
+
+// ===============================
+// VARIABLE TEMPORAL DE SESIÓN MFA
+// ===============================
+
+let pendingUserId = null;
 
 
 // ===============================
 // CONFIGURACIÓN GLOBAL DE ESCALADO
 // ===============================
 
-// Fuerza el factor de escala a 1 para evitar diferencias
-// de ancho causadas por escalado de Windows (125%, 150%, etc.)
 app.commandLine.appendSwitch("force-device-scale-factor", "1");
 
 
-
 // ===============================
-// CREACIÓN DE VENTANA PRINCIPAL
+// CREACIÓN DE LA VENTANA PRINCIPAL
 // ===============================
 
 function createWindow() {
 
-  // Crea la ventana principal de la aplicación
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
 
     webPreferences: {
+
       preload: path.join(__dirname, 'preload.js'),
-      // Archivo preload que expone APIs seguras al frontend
-
       contextIsolation: true,
-      // Aísla el contexto del renderer para mayor seguridad
-
       nodeIntegration: false,
-      // Evita que el frontend tenga acceso directo a Node.js
-
       zoomFactor: 1
-      // Fuerza el zoom interno del renderer a 100%
+
     }
   });
 
-  // Refuerza el zoom en 100%
   win.webContents.setZoomFactor(1);
 
-  // 🔥 CAMBIO IMPORTANTE 🔥
-  // Antes se estaba cargando index.html.
-  // Ahora se carga login.html, que es el archivo que estoy editando.
   win.loadFile(path.join(__dirname, 'renderer/login.html'));
 
 }
 
 
+// ===============================
+// LOGIN
+// ===============================
+
+ipcMain.handle('login', async (event, username, password) => {
+
+  try {
+
+    const result = await login(username, password);
+
+    // Guardamos el usuario para MFA
+    pendingUserId = result.id;
+
+    return result;
+
+  } catch (error) {
+
+    console.error("Error login:", error.message);
+    throw error;
+
+  }
+
+});
+
 
 // ===============================
-// MANEJO DE EVENTOS IPC
+// VERIFY CODE (MFA)
 // ===============================
 
-// Maneja la solicitud del renderer para listar credenciales
+ipcMain.handle('verify-code', async (event, code) => {
+
+  if (!pendingUserId) {
+    return false;
+  }
+
+  const valid = await verificationRepository.verifyCode(
+    pendingUserId,
+    code
+  );
+
+  if (valid) {
+    pendingUserId = null;
+  }
+
+  return valid;
+
+});
+
+
+// ===============================
+// RECOVER PASSWORD
+// ===============================
+
+ipcMain.handle('recover-password', async (event, userInput) => {
+
+  try {
+
+    console.log("Input recibido:", userInput);
+
+    const [rows] = await pool.execute(
+
+      "SELECT * FROM secure_it_vault.users WHERE username = ? OR email = ? LIMIT 1",
+
+      [userInput, userInput]
+
+    );
+
+    console.log("Resultado DB:", rows);
+
+    if (rows.length === 0) {
+      throw new Error("User not found");
+    }
+
+    const user = rows[0];
+
+    if (!user.email) {
+      throw new Error("User has no email registered");
+    }
+
+    const code = generateVerificationCode();
+
+    console.log("Código recuperación generado:", code);
+
+    await verificationRepository.saveCode(user.id, code);
+
+    await sendVerificationEmail(user.email, code);
+
+    pendingUserId = user.id;
+
+    return true;
+
+  } catch (error) {
+
+    console.error("Error recuperación:", error.message);
+    throw error;
+
+  }
+
+});
+
+
+// ===============================
+// RESET PASSWORD
+// ===============================
+
+ipcMain.handle('reset-password', async (event, password) => {
+
+  /**
+   * =====================================================
+   * ACTUALIZA LA CONTRASEÑA DEL USUARIO
+   * =====================================================
+   * Este proceso ocurre después de que el usuario:
+   * 1. solicitó recuperación
+   * 2. verificó el código MFA
+   * =====================================================
+   */
+
+  try{
+
+    if(!pendingUserId){
+      throw new Error("No user session");
+    }
+
+    // Genera hash seguro de la nueva contraseña
+    const hash = await hashPassword(password);
+
+    // Actualiza contraseña en DB
+    await pool.execute(
+
+      "UPDATE secure_it_vault.users SET password_hash = ? WHERE id = ?",
+
+      [hash, pendingUserId]
+
+    );
+
+    // Limpia sesión temporal
+    pendingUserId = null;
+
+    console.log("Password actualizada correctamente");
+
+    return true;
+
+  }catch(error){
+
+    console.error("Error actualizando password:", error.message);
+    throw error;
+
+  }
+
+});
+
+
+// ===============================
+// LISTAR CREDENCIALES
+// ===============================
+
 ipcMain.handle('list-credentials', async (event, vaultId) => {
 
   return await credentialsRepository.getCredentialsByVault(vaultId);
@@ -73,10 +237,8 @@ ipcMain.handle('list-credentials', async (event, vaultId) => {
 });
 
 
-
 // ===============================
-// INICIO DE LA APLICACIÓN
+// INICIO DE LA APP
 // ===============================
 
-// Inicia la aplicación cuando Electron está listo
 app.whenReady().then(createWindow);

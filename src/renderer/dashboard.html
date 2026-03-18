@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Secure IT Vault - Dashboard</title>
+
+<style>
+
+/* ==============================
+ESTILO GLOBAL
+============================== */
+
+body{
+  margin:0;
+  font-family:Segoe UI;
+  display:flex;
+  height:100vh;
+  background:#0f172a;
+  color:white;
+}
+
+/* ==============================
+SIDEBAR IZQUIERDO
+============================== */
+
+.sidebar{
+
+  width:240px;
+  background:#020617;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+
+  padding-top:20px;
+
+  box-shadow:2px 0 15px rgba(0,0,0,0.5);
+}
+
+/* Logo */
+
+.logo{
+  width:160px;
+  margin-bottom:30px;
+}
+
+/* Botones del menú */
+
+.menu-btn{
+
+  width:85%;
+  padding:12px;
+
+  margin-top:10px;
+
+  background:#1e293b;
+  border:none;
+  border-radius:8px;
+
+  color:white;
+  text-align:left;
+
+  cursor:pointer;
+
+  transition:0.2s;
+}
+
+.menu-btn:hover{
+  background:#38bdf8;
+}
+
+/* Logout abajo */
+
+.logout{
+
+  margin-top:auto;
+  margin-bottom:20px;
+
+  background:#ef4444;
+}
+
+.logout:hover{
+  background:#dc2626;
+}
+
+/* ==============================
+CONTENIDO DERECHO
+============================== */
+
+.content{
+
+  flex:1;
+  padding:30px;
+}
+
+/* Título */
+
+h1{
+  color:#38bdf8;
+}
+
+/* Tarjeta */
+
+.card{
+
+  background:#020617;
+  padding:20px;
+  border-radius:10px;
+  margin-top:20px;
+
+  box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- ==============================
+SIDEBAR
+============================== -->
+
+<div class="sidebar">
+
+  <!-- Logo -->
+  <img src="assets/logo.jpeg" class="logo">
+
+  <!-- Botones -->
+  <button class="menu-btn" onclick="loadSection('vaults')">Vaults</button>
+  <button class="menu-btn" onclick="loadSection('folders')">Folders</button>
+  <button class="menu-btn" onclick="loadSection('credentials')">Credentials</button>
+  <button class="menu-btn" onclick="loadSection('documents')">Documents</button>
+  <button class="menu-btn" onclick="loadSection('audit')">Audit Logs</button>
+  <button class="menu-btn" onclick="loadSection('users')">Users</button>
+
+  <!-- Logout -->
+  <button class="menu-btn logout" onclick="logout()">Cerrar sesión</button>
+
+</div>
+
+
+<!-- ==============================
+CONTENIDO PRINCIPAL
+============================== -->
+
+<div class="content">
+
+  <h1>Dashboard</h1>
+
+  <div id="mainContent" class="card">
+    Bienvenida al Secure IT Vault de East West Manufacturing
+  </div>
+
+</div>
+
+
+<!-- ==============================
+SCRIPT
+============================== -->
+
+<script>
+
+/**
+ * Cambia el contenido según el botón seleccionado
+ */
+function loadSection(section){
+
+  const content = document.getElementById("mainContent");
+
+  switch(section){
+
+    case "vaults":
+      content.innerHTML = " Gestión de Vaults";
+      break;
+
+    case "folders":
+      content.innerHTML = " Gestión de Folders";
+      break;
+
+    case "credentials":
+      content.innerHTML = " Lista de Credenciales";
+      break;
+
+    case "documents":
+      content.innerHTML = " Documentos";
+      break;
+
+    case "audit":
+      content.innerHTML = " Auditoría del sistema";
+      break;
+
+    case "users":
+      content.innerHTML = " Gestión de Usuarios";
+      break;
+
+  }
+
+}
+
+
+/**
+ * Cerrar sesión
+ */
+function logout(){
+
+  // Redirige al login
+  window.location.href = "login.html";
+
+}
+
+</script>
+
+</body>
+</html>

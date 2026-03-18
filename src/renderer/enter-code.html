@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<!-- Permite soporte para caracteres especiales -->
+
+<title>Verificación</title>
+<!-- Título de la ventana del proceso de verificación -->
+
+<style>
+
+/* Estilo general de la pantalla */
+body{
+    margin:0;
+    font-family:Segoe UI, Arial;  /* Fuente moderna */
+    background:#0f172a;           /* Fondo oscuro corporativo */
+    display:flex;
+    justify-content:center;       /* Centrado horizontal */
+    align-items:center;           /* Centrado vertical */
+    height:100vh;                 /* Altura completa */
+}
+
+/* Contenedor principal tipo modal */
+.popup{
+    background:#1e293b;           /* Fondo del cuadro */
+    padding:40px;
+    border-radius:12px;
+    width:380px;
+    text-align:center;
+    box-shadow:0 0 25px rgba(0,0,0,0.5); /* Sombra elegante */
+}
+
+/* Título */
+h2{
+    color:white;
+    margin-bottom:10px;
+}
+
+/* Texto descriptivo */
+p{
+    color:#94a3b8;                /* Gris suave */
+    margin-bottom:25px;
+}
+
+/* Contenedor de los inputs OTP */
+.code-input{
+    display:flex;
+    justify-content:space-between; /* Espacio uniforme entre los 6 campos */
+    margin-bottom:25px;
+}
+
+/* Estilo de cada casilla del código */
+.code-input input{
+    width:45px;
+    height:55px;
+    font-size:24px;               /* Tamaño grande para mejor visibilidad */
+    text-align:center;            /* Número centrado */
+    border:none;
+    border-radius:8px;
+    background:#334155;           /* Fondo oscuro */
+    color:white;
+}
+
+/* Botón de verificación */
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#22c55e;           /* Verde confirmación */
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+/* Hover del botón */
+button:hover{
+    background:#16a34a;           /* Verde más oscuro */
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- Contenedor principal del proceso OTP -->
+<div class="popup">
+
+<h2>Email Verification</h2>
+<p>Enter the 6-digit code sent to your email</p>
+
+<!-- Inputs OTP separados para mejor experiencia de usuario -->
+<div class="code-input">
+
+<input class="otp" maxlength="1">
+<input class="otp" maxlength="1">
+<input class="otp" maxlength="1">
+<input class="otp" maxlength="1">
+<input class="otp" maxlength="1">
+<input class="otp" maxlength="1">
+
+</div>
+
+<!-- Botón que ejecuta la función verifyCode() -->
+<button onclick="verifyCode()">Verify Code</button>
+
+</div>
+
+<!-- Archivo JS que contiene la lógica de validación del código -->
+<script src="enter-code.js"></script>
+
+</body>
+</html>
