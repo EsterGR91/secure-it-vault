@@ -238,6 +238,27 @@ ipcMain.handle('list-credentials', async (event, vaultId) => {
 
 
 // ===============================
+// USERS - LISTAR USUARIOS
+// ===============================
+
+ipcMain.handle('get-users', async () => {
+
+  /**
+   * Esta consulta trae los datos básicos de los usuarios
+   * NO traemos password por seguridad 
+   */
+  const [rows] = await pool.execute(`
+    SELECT id, username, email, role, is_active, created_at
+    FROM users
+    ORDER BY created_at DESC
+  `);
+
+  return rows;
+
+});
+
+
+// ===============================
 // INICIO DE LA APP
 // ===============================
 
