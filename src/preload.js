@@ -12,7 +12,14 @@ contextBridge.exposeInMainWorld('api', {
   login: (username, password) =>
     ipcRenderer.invoke('login', username, password),
 
-
+  /**
+ * =====================================================
+ * USERS
+ * Obtiene la lista de usuarios desde el backend
+ * =====================================================
+ */
+getUsers: () =>
+  ipcRenderer.invoke('get-users'),
   /**
    * =====================================================
    * VERIFICACIÓN MFA

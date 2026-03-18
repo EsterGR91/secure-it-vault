@@ -1,211 +1,272 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <title>Secure IT Vault - Dashboard</title>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 <style>
 
-/* ==============================
-ESTILO GLOBAL
-============================== */
-
+/* ================= GENERAL ================= */
 body{
   margin:0;
   font-family:Segoe UI;
-  display:flex;
-  height:100vh;
   background:#0f172a;
   color:white;
+  display:flex;
 }
 
-/* ==============================
-SIDEBAR IZQUIERDO
-============================== */
-
+/* ================= SIDEBAR ================= */
 .sidebar{
-
   width:240px;
   background:#020617;
-
+  padding:20px;
   display:flex;
   flex-direction:column;
+  justify-content:space-between;
+}
+
+/* LOGO */
+.logo-container{
+  display:flex;
+  justify-content:center;
   align-items:center;
-
-  padding-top:20px;
-
-  box-shadow:2px 0 15px rgba(0,0,0,0.5);
+  margin:20px 0 30px 0;
 }
 
-/* Logo */
 
-.logo{
-  width:160px;
-  margin-bottom:30px;
+.logo-container img{
+  height:80px;
+  width:auto;
+  opacity:0.95;
+  object-fit:contain;
 }
 
-/* Botones del menú */
+.logo-container span{
+  font-size:18px;
+  font-weight:600;
+}
 
-.menu-btn{
-
-  width:85%;
+/* BOTONES */
+.nav-btn{
+  width:100%;
   padding:12px;
-
-  margin-top:10px;
-
+  margin-bottom:10px;
   background:#1e293b;
   border:none;
-  border-radius:8px;
-
   color:white;
-  text-align:left;
-
+  border-radius:10px;
   cursor:pointer;
-
+  text-align:left;
+  display:flex;
+  align-items:center;
+  gap:10px;
   transition:0.2s;
+  font-size:14px;
 }
 
-.menu-btn:hover{
-  background:#38bdf8;
+.nav-btn:hover{
+  background:#334155;
 }
 
-/* Logout abajo */
-
+/* LOGOUT */
 .logout{
-
-  margin-top:auto;
-  margin-bottom:20px;
-
   background:#ef4444;
 }
 
-.logout:hover{
-  background:#dc2626;
-}
-
-/* ==============================
-CONTENIDO DERECHO
-============================== */
-
-.content{
-
+/* ================= MAIN ================= */
+.main{
   flex:1;
-  padding:30px;
+  padding:30px 40px;
 }
 
-/* Título */
+/* ================= HEADER ================= */
+.header{
+  margin-bottom:30px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  padding-bottom:15px;
+}
 
-h1{
+/* 👇 YA SIN LOGO AQUÍ */
+.header-left h1{
+  margin:0;
+}
+
+.header-left p{
+  margin:0;
+  color:#94a3b8;
+  font-size:14px;
+}
+
+/* ================= GRID ================= */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
+  gap:25px;
+}
+
+/* ================= CARDS ================= */
+.card{
+  background:#020617;
+  padding:25px;
+  border-radius:16px;
+  text-align:center;
+  transition:0.2s;
+  box-shadow:0 0 10px rgba(0,0,0,0.3);
+}
+
+.card:hover{
+  background:#1e293b;
+  transform:translateY(-5px);
+}
+
+.card i{
+  font-size:38px;
+  margin-bottom:10px;
   color:#38bdf8;
 }
 
-/* Tarjeta */
+.card button{
+  margin-top:12px;
+  padding:10px 15px;
+  border:none;
+  border-radius:8px;
+  background:#38bdf8;
+  color:white;
+  cursor:pointer;
+  transition:0.2s;
+  font-size:14px;
+}
 
-.card{
-
-  background:#020617;
-  padding:20px;
-  border-radius:10px;
-  margin-top:20px;
-
-  box-shadow:0 0 20px rgba(0,0,0,0.4);
+.card button:hover{
+  background:#0ea5e9;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<!-- ==============================
-SIDEBAR
-============================== -->
-
+<!-- ================= SIDEBAR ================= -->
 <div class="sidebar">
 
-  <!-- Logo -->
-  <img src="assets/logo.jpeg" class="logo">
+  <div>
 
-  <!-- Botones -->
-  <button class="menu-btn" onclick="loadSection('vaults')">Vaults</button>
-  <button class="menu-btn" onclick="loadSection('folders')">Folders</button>
-  <button class="menu-btn" onclick="loadSection('credentials')">Credentials</button>
-  <button class="menu-btn" onclick="loadSection('documents')">Documents</button>
-  <button class="menu-btn" onclick="loadSection('audit')">Audit Logs</button>
-  <button class="menu-btn" onclick="loadSection('users')">Users</button>
+    <!-- LOGO ( AQUÍ) -->
+   <div class="logo-container">
+  <img src="assets/logo.jpeg" alt="Logo">
+</div>
 
-  <!-- Logout -->
-  <button class="menu-btn logout" onclick="logout()">Cerrar sesión</button>
+    <!-- MENÚ -->
+    <button class="nav-btn" onclick="goTo('dashboard')">
+      <i class="fa-solid fa-house"></i> Dashboard
+    </button>
+
+    <button class="nav-btn" onclick="goTo('users')">
+      <i class="fa-solid fa-users"></i> Users
+    </button>
+
+    <button class="nav-btn" onclick="goTo('vaults')">
+      <i class="fa-solid fa-lock"></i> Vaults
+    </button>
+
+    <button class="nav-btn" onclick="goTo('credentials')">
+      <i class="fa-solid fa-key"></i> Credentials
+    </button>
+
+    <button class="nav-btn" onclick="goTo('folders')">
+      <i class="fa-solid fa-folder"></i> Folders
+    </button>
+
+    <button class="nav-btn" onclick="goTo('documents')">
+      <i class="fa-solid fa-file"></i> Documents
+    </button>
+
+    <button class="nav-btn" onclick="goTo('audit')">
+      <i class="fa-solid fa-clipboard"></i> Audit Logs
+    </button>
+
+  </div>
+
+  <!-- LOGOUT -->
+  <button class="nav-btn logout" onclick="logout()">
+    <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+  </button>
 
 </div>
 
+<!-- ================= MAIN ================= -->
+<div class="main">
 
-<!-- ==============================
-CONTENIDO PRINCIPAL
-============================== -->
+  <!-- HEADER LIMPIO -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Dashboard</h1>
+      <p>Bienvenido al sistema Secure IT Vault</p>
+    </div>
+  </div>
 
-<div class="content">
+  <!-- CARDS -->
+  <div class="grid">
 
-  <h1>Dashboard</h1>
+    <div class="card">
+      <i class="fa-solid fa-users"></i>
+      <h3>Usuarios</h3>
+      <p>Gestiona usuarios, roles y accesos del sistema.</p>
+      <button onclick="goTo('users')">Ingresar</button>
+    </div>
 
-  <div id="mainContent" class="card">
-    Bienvenida al Secure IT Vault de East West Manufacturing
+    <div class="card">
+      <i class="fa-solid fa-lock"></i>
+      <h3>Vaults</h3>
+      <p>Administra bóvedas seguras de información.</p>
+      <button onclick="goTo('vaults')">Ingresar</button>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-key"></i>
+      <h3>Credenciales</h3>
+      <p>Gestiona contraseñas cifradas y accesos.</p>
+      <button onclick="goTo('credentials')">Ingresar</button>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-folder"></i>
+      <h3>Folders</h3>
+      <p>Organiza la información en carpetas.</p>
+      <button onclick="goTo('folders')">Ingresar</button>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-file"></i>
+      <h3>Documentos</h3>
+      <p>Almacena archivos seguros.</p>
+      <button onclick="goTo('documents')">Ingresar</button>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-clipboard"></i>
+      <h3>Auditoría</h3>
+      <p>Consulta el historial del sistema.</p>
+      <button onclick="goTo('audit')">Ingresar</button>
+    </div>
+
   </div>
 
 </div>
 
-
-<!-- ==============================
-SCRIPT
-============================== -->
-
 <script>
 
-/**
- * Cambia el contenido según el botón seleccionado
- */
-function loadSection(section){
-
-  const content = document.getElementById("mainContent");
-
-  switch(section){
-
-    case "vaults":
-      content.innerHTML = " Gestión de Vaults";
-      break;
-
-    case "folders":
-      content.innerHTML = " Gestión de Folders";
-      break;
-
-    case "credentials":
-      content.innerHTML = " Lista de Credenciales";
-      break;
-
-    case "documents":
-      content.innerHTML = " Documentos";
-      break;
-
-    case "audit":
-      content.innerHTML = " Auditoría del sistema";
-      break;
-
-    case "users":
-      content.innerHTML = " Gestión de Usuarios";
-      break;
-
-  }
-
+function goTo(module){
+  window.location.href = module + ".html";
 }
 
-
-/**
- * Cerrar sesión
- */
 function logout(){
-
-  // Redirige al login
+  localStorage.removeItem("user");
   window.location.href = "login.html";
-
 }
 
 </script>
