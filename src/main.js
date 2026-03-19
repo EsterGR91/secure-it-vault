@@ -18,7 +18,11 @@ const verificationRepository = require('./db/verification.repository');
 // IMPORTACIÓN DE SERVICIOS
 // ===============================
 
+// Servicio de autenticación (login)
 const { login } = require('./services/auth.service');
+
+// Servicio de usuarios (CRUD + lógica)
+const userService = require('./services/user.service');
 
 
 // ===============================
@@ -28,16 +32,18 @@ const { login } = require('./services/auth.service');
 const pool = require('./db/connection');
 const { generateVerificationCode } = require('./security/code-generator');
 const { sendVerificationEmail } = require('./security/email');
-
-// IMPORTAMOS HASH DE CONTRASEÑA
 const { hashPassword } = require('./security/hash');
 
 
 // ===============================
-// VARIABLE TEMPORAL DE SESIÓN MFA
+// VARIABLES DE SESIÓN
 // ===============================
 
+// Usuario pendiente para MFA (verificación por código)
 let pendingUserId = null;
+
+// Usuario autenticado actual (para auditoría)
+let currentUserId = 1; // luego se conecta con login real
 
 
 // ===============================
@@ -58,17 +64,17 @@ function createWindow() {
     height: 700,
 
     webPreferences: {
-
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       zoomFactor: 1
-
     }
   });
 
+  // Asegura zoom fijo
   win.webContents.setZoomFactor(1);
 
+  // Pantalla inicial
   win.loadFile(path.join(__dirname, 'renderer/login.html'));
 
 }
@@ -84,8 +90,11 @@ ipcMain.handle('login', async (event, username, password) => {
 
     const result = await login(username, password);
 
-    // Guardamos el usuario para MFA
+    // Guardamos usuario para MFA
     pendingUserId = result.id;
+
+    // Guardamos usuario activo (para auditoría)
+    currentUserId = result.id;
 
     return result;
 
@@ -124,7 +133,7 @@ ipcMain.handle('verify-code', async (event, code) => {
 
 
 // ===============================
-// RECOVER PASSWORD
+// RECUPERACIÓN DE CONTRASEÑA
 // ===============================
 
 ipcMain.handle('recover-password', async (event, userInput) => {
@@ -134,14 +143,9 @@ ipcMain.handle('recover-password', async (event, userInput) => {
     console.log("Input recibido:", userInput);
 
     const [rows] = await pool.execute(
-
       "SELECT * FROM secure_it_vault.users WHERE username = ? OR email = ? LIMIT 1",
-
       [userInput, userInput]
-
     );
-
-    console.log("Resultado DB:", rows);
 
     if (rows.length === 0) {
       throw new Error("User not found");
@@ -153,14 +157,18 @@ ipcMain.handle('recover-password', async (event, userInput) => {
       throw new Error("User has no email registered");
     }
 
+    // Genera código de verificación
     const code = generateVerificationCode();
 
     console.log("Código recuperación generado:", code);
 
+    // Guarda código en DB
     await verificationRepository.saveCode(user.id, code);
 
+    // Envía correo
     await sendVerificationEmail(user.email, code);
 
+    // Guarda usuario temporal
     pendingUserId = user.id;
 
     return true;
@@ -176,20 +184,10 @@ ipcMain.handle('recover-password', async (event, userInput) => {
 
 
 // ===============================
-// RESET PASSWORD
+// RESET PASSWORD (DESDE RECOVERY)
 // ===============================
 
 ipcMain.handle('reset-password', async (event, password) => {
-
-  /**
-   * =====================================================
-   * ACTUALIZA LA CONTRASEÑA DEL USUARIO
-   * =====================================================
-   * Este proceso ocurre después de que el usuario:
-   * 1. solicitó recuperación
-   * 2. verificó el código MFA
-   * =====================================================
-   */
 
   try{
 
@@ -197,19 +195,16 @@ ipcMain.handle('reset-password', async (event, password) => {
       throw new Error("No user session");
     }
 
-    // Genera hash seguro de la nueva contraseña
+    // Hash seguro
     const hash = await hashPassword(password);
 
-    // Actualiza contraseña en DB
+    // Actualización en DB
     await pool.execute(
-
       "UPDATE secure_it_vault.users SET password_hash = ? WHERE id = ?",
-
       [hash, pendingUserId]
-
     );
 
-    // Limpia sesión temporal
+    // Limpiar sesión temporal
     pendingUserId = null;
 
     console.log("Password actualizada correctamente");
@@ -238,15 +233,11 @@ ipcMain.handle('list-credentials', async (event, vaultId) => {
 
 
 // ===============================
-// USERS - LISTAR USUARIOS
+// USERS - LISTAR (SQL DIRECTO)
 // ===============================
 
 ipcMain.handle('get-users', async () => {
 
-  /**
-   * Esta consulta trae los datos básicos de los usuarios
-   * NO traemos password por seguridad 
-   */
   const [rows] = await pool.execute(`
     SELECT id, username, email, role, is_active, created_at
     FROM users
@@ -254,6 +245,66 @@ ipcMain.handle('get-users', async () => {
   `);
 
   return rows;
+
+});
+
+
+// ===============================
+// USERS - CRUD COMPLETO (SERVICE)
+// ===============================
+
+ipcMain.handle('users:get', async () => {
+
+  return await userService.getUsers();
+
+});
+
+ipcMain.handle('users:create', async (e, data) => {
+
+  return await userService.createUser(data, currentUserId);
+
+});
+
+ipcMain.handle('users:update', async (e, id, data) => {
+
+  return await userService.updateUser(id, data, currentUserId);
+
+});
+
+ipcMain.handle('users:delete', async (e, id) => {
+
+  return await userService.deleteUser(id, currentUserId);
+
+});
+
+
+// ===============================
+//  UPDATE PASSWORD DESDE ADMIN
+// ===============================
+
+ipcMain.handle('updateUserPassword', async (e, id, pass) => {
+
+  try{
+
+    // Hash seguro
+    const hashedPassword = await hashPassword(pass);
+
+    // Update en DB
+    await pool.execute(
+      "UPDATE secure_it_vault.users SET password_hash = ? WHERE id = ?",
+      [hashedPassword, id]
+    );
+
+    console.log("Password actualizada para usuario:", id);
+
+    return true;
+
+  }catch(error){
+
+    console.error("Error updateUserPassword:", error.message);
+    throw error;
+
+  }
 
 });
 

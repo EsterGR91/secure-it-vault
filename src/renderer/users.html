@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Users</title>
+
+<style>
+
+/* ====== GENERAL ====== */
+body{
+  margin:0;
+  font-family: 'Segoe UI';
+  background: linear-gradient(135deg,#0f172a,#020617);
+  color:white;
+  padding:30px;
+}
+
+/* ====== HEADER ====== */
+.header-center{
+  text-align:center;
+}
+
+.header-center img{
+  width:70px;
+  margin-bottom:10px;
+}
+
+h2{
+  margin-bottom:20px;
+}
+
+/* ====== TOP BUTTONS ====== */
+.top-actions{
+  position:absolute;
+  top:20px;
+  right:20px;
+}
+
+.btn{
+  padding:10px 16px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.2s;
+}
+
+.btn:hover{
+  transform:scale(1.05);
+}
+
+/* ====== FORM ====== */
+.form{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.form input{
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  background:#1e293b;
+  color:white;
+  outline:none;
+  transition:0.2s;
+}
+
+.form input:focus{
+  box-shadow:0 0 10px #3b82f6;
+}
+
+/* BOTON CREAR */
+.form button{
+  background:#22c55e;
+  color:white;
+}
+
+.form button:hover{
+  background:#16a34a;
+}
+
+/* ====== SEARCH ====== */
+.search{
+  display:flex;
+  justify-content:center;
+  margin:20px;
+}
+
+.search-box{
+  display:flex;
+  background:#1e293b;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.search-box input{
+  padding:10px;
+  border:none;
+  background:transparent;
+  color:white;
+  outline:none;
+  width:250px;
+}
+
+.search-box button{
+  background:#3b82f6;
+  border:none;
+  padding:10px 15px;
+  cursor:pointer;
+}
+
+.search-box button:hover{
+  background:#2563eb;
+}
+
+/* ====== TABLE ====== */
+table{
+  width:100%;
+  margin-top:20px;
+  border-collapse:collapse;
+}
+
+th{
+  text-align:left;
+  padding:12px;
+  color:#94a3b8;
+}
+
+td{
+  padding:12px;
+  border-top:1px solid #1e293b;
+}
+
+/* ====== ACTIONS ====== */
+.actions{
+  display:flex;
+  gap:10px;
+}
+
+.btn-edit{
+  background:#facc15;
+  border:none;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.btn-edit:hover{
+  background:#eab308;
+}
+
+.btn-delete{
+  background:#ef4444;
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.btn-delete:hover{
+  background:#dc2626;
+}
+
+/* ====== MODAL ====== */
+.edit-modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,0.7);
+}
+
+.edit-content{
+  background:rgba(30,41,59,0.95);
+  backdrop-filter:blur(10px);
+  padding:30px;
+  border-radius:15px;
+  width:350px;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+.edit-content h3{
+  margin-bottom:15px;
+}
+
+.edit-content input,
+.edit-content select{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#0f172a;
+  color:white;
+  outline:none;
+}
+
+.edit-content input:focus{
+  box-shadow:0 0 10px #3b82f6;
+}
+
+/* BOTONES MODAL */
+.edit-actions{
+  margin-top:20px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.save-btn{
+  background:#22c55e;
+  color:white;
+}
+
+.cancel-btn{
+  background:#ef4444;
+  color:white;
+}
+
+.save-btn:hover{
+  background:#16a34a;
+}
+
+.cancel-btn:hover{
+  background:#dc2626;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="top-actions">
+  <button class="btn" onclick="goBack()">⬅</button>
+  <button class="btn" onclick="logout()">Salir</button>
+</div>
+
+<div class="header-center">
+  <img src="./assets/logo.jpeg">
+  <h2>Usuarios</h2>
+</div>
+
+<!-- FORM -->
+<div class="form">
+  <input id="username" placeholder="Username">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <input id="confirmPassword" type="password" placeholder="Repeat Password">
+  <button onclick="createUser()">Crear</button>
+</div>
+
+<!-- SEARCH -->
+<div class="search">
+  <div class="search-box">
+    <input id="search" placeholder="Buscar..." oninput="filterUsers()">
+    <button onclick="filterUsers()">🔎</button>
+  </div>
+</div>
+
+<!-- TABLE -->
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Username</th>
+<th>Email</th>
+<th>Role</th>
+<th>Acciones</th>
+</tr>
+</thead>
+
+<tbody id="table"></tbody>
+</table>
+
+<!-- MODAL -->
+<div id="editBox" class="edit-modal">
+
+  <div class="edit-content">
+
+    <h3>Editar usuario</h3>
+
+    <input id="editUsername">
+    <input id="editEmail">
+
+    <select id="editRole">
+      <option value="admin">Admin</option>
+      <option value="user">User</option>
+    </select>
+
+    <input id="editPassword" placeholder="Nueva contraseña">
+    <input id="editConfirm" placeholder="Repetir contraseña">
+
+    <div class="edit-actions">
+      <button class="btn save-btn" onclick="saveEdit()">Guardar</button>
+      <button class="btn cancel-btn" onclick="cancelEdit()">Cancelar</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="users.js"></script>
+
+<script>
+function goBack(){ window.location.href="dashboard.html"; }
+function logout(){ localStorage.clear(); window.location.href="login.html"; }
+</script>
+
+</body>
+</html>

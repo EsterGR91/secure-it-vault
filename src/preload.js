@@ -6,57 +6,78 @@ contextBridge.exposeInMainWorld('api', {
   /**
    * =====================================================
    * LOGIN
-   * Envía el usuario y contraseña al proceso principal
    * =====================================================
    */
   login: (username, password) =>
     ipcRenderer.invoke('login', username, password),
 
   /**
- * =====================================================
- * USERS
- * Obtiene la lista de usuarios desde el backend
- * =====================================================
- */
-getUsers: () =>
-  ipcRenderer.invoke('get-users'),
+   * =====================================================
+   * USERS (MÉTODO SIMPLE QUE YA TENÍAS)
+   * =====================================================
+   */
+  getUsers: () =>
+    ipcRenderer.invoke('get-users'),
+
+  /**
+   * =====================================================
+   * 🔥 USERS (CRUD COMPLETO - NUEVO)
+   * =====================================================
+   */
+
+  // Obtener lista completa desde el nuevo servicio
+  getUsersFull: () =>
+    ipcRenderer.invoke('users:get'),
+
+  // Crear usuario
+  createUser: (data) =>
+    ipcRenderer.invoke('users:create', data),
+
+  // Actualizar usuario
+  updateUser: (id, data) =>
+    ipcRenderer.invoke('users:update', id, data),
+
+  // Eliminar usuario
+  deleteUser: (id) =>
+    ipcRenderer.invoke('users:delete', id),
+
+  /**
+   * =====================================================
+   * 🔐 ACTUALIZAR PASSWORD DE USUARIO (NUEVO)
+   * =====================================================
+   * Permite cambiar la contraseña de un usuario específico
+   * desde el dashboard o panel admin
+   */
+  updateUserPassword: (id, pass) =>
+    ipcRenderer.invoke('updateUserPassword', id, pass),
+
   /**
    * =====================================================
    * VERIFICACIÓN MFA
-   * Envía el código ingresado por el usuario
    * =====================================================
    */
   verifyCode: (code) =>
     ipcRenderer.invoke('verify-code', code),
 
-
   /**
    * =====================================================
    * LISTAR CREDENCIALES
-   * Solicita al backend la lista de credenciales
-   * almacenadas en un vault específico
    * =====================================================
    */
   listCredentials: (vaultId) =>
     ipcRenderer.invoke('list-credentials', vaultId),
 
-
   /**
    * =====================================================
    * RECUPERAR CONTRASEÑA
-   * Envía username o email para iniciar
-   * el proceso de recuperación
    * =====================================================
    */
   recoverPassword: (userInput) =>
     ipcRenderer.invoke('recover-password', userInput),
 
-
   /**
    * =====================================================
    * RESET PASSWORD
-   * Envía la nueva contraseña al backend
-   * para actualizarla en la base de datos
    * =====================================================
    */
   resetPassword: (password) =>

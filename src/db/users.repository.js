@@ -1,13 +1,16 @@
-const pool = require('./connection'); // Importa el pool de conexión a la base de datos
+const pool = require('./connection');
+
+// =======================
+// EXISTENTES (NO BORRAR)
+// =======================
 
 async function createUser({ username, email, passwordHash, role = 'user' }) {
-  // Consulta SQL para insertar un nuevo usuario
+
   const sql = `
     INSERT INTO users (username, email, password_hash, role)
     VALUES (?, ?, ?, ?)
   `;
 
-  // Ejecuta la consulta con parámetros para evitar SQL Injection
   const [result] = await pool.execute(sql, [
     username,
     email,
@@ -15,37 +18,94 @@ async function createUser({ username, email, passwordHash, role = 'user' }) {
     role
   ]);
 
-  // Retorna el ID del usuario creado
   return result.insertId;
 }
 
 async function findUserByUsername(username) {
-  // Consulta SQL para buscar un usuario activo por su username
+
   const sql = `
     SELECT * FROM users
     WHERE username = ? AND is_active = 1
   `;
 
-  // Ejecuta la consulta y retorna el primer resultado
   const [rows] = await pool.execute(sql, [username]);
   return rows[0];
 }
 
 async function updateLastLogin(userId) {
-  // Consulta SQL para actualizar la fecha y hora del último inicio de sesión
+
   const sql = `
     UPDATE users
     SET last_login = NOW()
     WHERE id = ?
   `;
 
-  // Ejecuta la actualización usando el ID del usuario
   await pool.execute(sql, [userId]);
 }
 
-// Exporta las funciones del repositorio de usuarios
+
+// =======================
+// NUEVAS FUNCIONES CRUD
+// =======================
+
+async function getAllUsers() {
+
+  const [rows] = await pool.execute(`
+    SELECT id, username, email, role, is_active, created_at
+    FROM users
+    ORDER BY created_at DESC
+  `);
+
+  return rows;
+}
+
+async function updateUser(id, { username, email, role }) {
+
+  const [result] = await pool.execute(`
+    UPDATE users
+    SET username = ?, email = ?, role = ?
+    WHERE id = ?
+  `, [username, email, role, id]);
+
+  return result.affectedRows > 0;
+}
+
+async function deleteUser(id) {
+
+  const [result] = await pool.execute(`
+    UPDATE users
+    SET is_active = 0
+    WHERE id = ?
+  `, [id]);
+
+  return result.affectedRows > 0;
+}
+
+// =====================================================
+// ACTUALIZAR PASSWORD
+// =====================================================
+async function updatePassword(id, passwordHash){
+
+  const sql = `
+    UPDATE users
+    SET password_hash = ?
+    WHERE id = ?
+  `;
+
+  await pool.execute(sql, [passwordHash, id]);
+
+}
+// =======================
+// EXPORTS
+// =======================
+
 module.exports = {
   createUser,
   findUserByUsername,
-  updateLastLogin
+  updateLastLogin,
+  updatePassword,  
+
+  getAllUsers,
+  updateUser,
+  deleteUser
 };
