@@ -39,22 +39,22 @@ const { hashPassword } = require('./security/hash');
 // VARIABLES DE SESIÓN
 // ===============================
 
-// Usuario pendiente para MFA (verificación por código)
+// Usuario pendiente para MFA
 let pendingUserId = null;
 
-// Usuario autenticado actual (para auditoría)
-let currentUserId = 1; // luego se conecta con login real
+// Usuario autenticado actual
+let currentUserId = 1;
 
 
 // ===============================
-// CONFIGURACIÓN GLOBAL DE ESCALADO
+// CONFIGURACIÓN GLOBAL
 // ===============================
 
 app.commandLine.appendSwitch("force-device-scale-factor", "1");
 
 
 // ===============================
-// CREACIÓN DE LA VENTANA PRINCIPAL
+// CREAR VENTANA
 // ===============================
 
 function createWindow() {
@@ -71,12 +71,9 @@ function createWindow() {
     }
   });
 
-  // Asegura zoom fijo
   win.webContents.setZoomFactor(1);
 
-  // Pantalla inicial
   win.loadFile(path.join(__dirname, 'renderer/login.html'));
-
 }
 
 
@@ -90,10 +87,7 @@ ipcMain.handle('login', async (event, username, password) => {
 
     const result = await login(username, password);
 
-    // Guardamos usuario para MFA
     pendingUserId = result.id;
-
-    // Guardamos usuario activo (para auditoría)
     currentUserId = result.id;
 
     return result;
@@ -114,18 +108,14 @@ ipcMain.handle('login', async (event, username, password) => {
 
 ipcMain.handle('verify-code', async (event, code) => {
 
-  if (!pendingUserId) {
-    return false;
-  }
+  if (!pendingUserId) return false;
 
   const valid = await verificationRepository.verifyCode(
     pendingUserId,
     code
   );
 
-  if (valid) {
-    pendingUserId = null;
-  }
+  if (valid) pendingUserId = null;
 
   return valid;
 
@@ -133,42 +123,27 @@ ipcMain.handle('verify-code', async (event, code) => {
 
 
 // ===============================
-// RECUPERACIÓN DE CONTRASEÑA
+// RECUPERACIÓN PASSWORD
 // ===============================
 
 ipcMain.handle('recover-password', async (event, userInput) => {
 
   try {
 
-    console.log("Input recibido:", userInput);
-
     const [rows] = await pool.execute(
       "SELECT * FROM secure_it_vault.users WHERE username = ? OR email = ? LIMIT 1",
       [userInput, userInput]
     );
 
-    if (rows.length === 0) {
-      throw new Error("User not found");
-    }
+    if (rows.length === 0) throw new Error("User not found");
 
     const user = rows[0];
 
-    if (!user.email) {
-      throw new Error("User has no email registered");
-    }
-
-    // Genera código de verificación
     const code = generateVerificationCode();
 
-    console.log("Código recuperación generado:", code);
-
-    // Guarda código en DB
     await verificationRepository.saveCode(user.id, code);
-
-    // Envía correo
     await sendVerificationEmail(user.email, code);
 
-    // Guarda usuario temporal
     pendingUserId = user.id;
 
     return true;
@@ -184,36 +159,29 @@ ipcMain.handle('recover-password', async (event, userInput) => {
 
 
 // ===============================
-// RESET PASSWORD (DESDE RECOVERY)
+// RESET PASSWORD
 // ===============================
 
 ipcMain.handle('reset-password', async (event, password) => {
 
   try{
 
-    if(!pendingUserId){
-      throw new Error("No user session");
-    }
+    if(!pendingUserId) throw new Error("No user session");
 
-    // Hash seguro
     const hash = await hashPassword(password);
 
-    // Actualización en DB
     await pool.execute(
       "UPDATE secure_it_vault.users SET password_hash = ? WHERE id = ?",
       [hash, pendingUserId]
     );
 
-    // Limpiar sesión temporal
     pendingUserId = null;
-
-    console.log("Password actualizada correctamente");
 
     return true;
 
   }catch(error){
 
-    console.error("Error actualizando password:", error.message);
+    console.error("Error reset password:", error.message);
     throw error;
 
   }
@@ -233,7 +201,7 @@ ipcMain.handle('list-credentials', async (event, vaultId) => {
 
 
 // ===============================
-// USERS - LISTAR (SQL DIRECTO)
+// USERS - LISTAR
 // ===============================
 
 ipcMain.handle('get-users', async () => {
@@ -250,7 +218,7 @@ ipcMain.handle('get-users', async () => {
 
 
 // ===============================
-// USERS - CRUD COMPLETO (SERVICE)
+// USERS - CRUD
 // ===============================
 
 ipcMain.handle('users:get', async () => {
@@ -271,31 +239,48 @@ ipcMain.handle('users:update', async (e, id, data) => {
 
 });
 
+
+/* =========================================================
+    DELETE USER (CORREGIDO Y DEBUG)
+========================================================= */
 ipcMain.handle('users:delete', async (e, id) => {
 
-  return await userService.deleteUser(id, currentUserId);
+  try {
+
+    console.log(" DELETE recibido en backend:", id);
+
+    // Ejecuta delete en el servicio
+    const result = await userService.deleteUser(id, currentUserId);
+
+    console.log("Resultado delete:", result);
+
+    //  IMPORTANTE: devolver algo al frontend
+    return result || true;
+
+  } catch (error) {
+
+    console.error("Error eliminando usuario:", error.message);
+    throw error;
+
+  }
 
 });
 
 
 // ===============================
-//  UPDATE PASSWORD DESDE ADMIN
+// UPDATE PASSWORD ADMIN
 // ===============================
 
 ipcMain.handle('updateUserPassword', async (e, id, pass) => {
 
   try{
 
-    // Hash seguro
     const hashedPassword = await hashPassword(pass);
 
-    // Update en DB
     await pool.execute(
       "UPDATE secure_it_vault.users SET password_hash = ? WHERE id = ?",
       [hashedPassword, id]
     );
-
-    console.log("Password actualizada para usuario:", id);
 
     return true;
 
@@ -310,7 +295,7 @@ ipcMain.handle('updateUserPassword', async (e, id, pass) => {
 
 
 // ===============================
-// INICIO DE LA APP
+// INICIO APP
 // ===============================
 
 app.whenReady().then(createWindow);

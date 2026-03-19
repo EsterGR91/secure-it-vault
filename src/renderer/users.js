@@ -1,117 +1,144 @@
+
+// @ts-nocheck
+
 /* =========================================================
    VARIABLES GLOBALES
-   ========================================================= */
-
-let allUsers = [];      // Guarda todos los usuarios cargados desde la BD
-let currentUser = null; // Usuario actualmente seleccionado para edición
+========================================================= */
+let allUsers = [];
+let currentUser = null;
 
 
 /* =========================================================
-   CARGAR USUARIOS DESDE BACKEND
-   ========================================================= */
-
+   CARGAR USUARIOS
+========================================================= */
 async function loadUsers(){
-  try{
+  try {
 
-    // Llamada al backend (Electron preload)
+    console.log("Cargando usuarios...");
+
+    const table = document.getElementById("table");
+    table.innerHTML = "<tr><td colspan='5'>Cargando...</td></tr>";
+
+    // Obtener usuarios desde backend
     allUsers = await window.api.getUsersFull();
 
-    // Renderizar en tabla
+    console.log("Usuarios cargados:", allUsers);
+
+    // Renderizar
     renderUsers(allUsers);
 
-  }catch(error){
-
+  } catch (error){
     console.error("Error loading users:", error);
-
   }
 }
 
 
 /* =========================================================
-   RENDERIZAR USUARIOS EN LA TABLA
-   ========================================================= */
-
+   RENDERIZAR USUARIOS (FIX BOTONES )
+========================================================= */
 function renderUsers(users){
 
   const table = document.getElementById("table");
-
-  // Limpiar tabla antes de renderizar
   table.innerHTML = "";
 
   users.forEach(u => {
 
-    table.innerHTML += `
-      <tr>
-        <td>${u.id}</td>
-        <td>${u.username}</td>
-        <td>${u.email}</td>
-        <td>${u.role}</td>
-        <td class="actions">
+    const row = document.createElement("tr");
 
-          <!-- BOTÓN EDITAR -->
-          <button class="btn-edit" onclick='openEdit(${JSON.stringify(u)})'>
-            Editar
-          </button>
-
-          <!-- BOTÓN ELIMINAR -->
-          <button class="btn-delete" onclick="deleteUser(${u.id})">
-            Eliminar
-          </button>
-
-        </td>
-      </tr>
+    row.innerHTML = `
+      <td>${u.id}</td>
+      <td>${u.username}</td>
+      <td>${u.email}</td>
+      <td>${u.role}</td>
     `;
-  });
 
+    const actions = document.createElement("td");
+    actions.className = "actions";
+
+    // EDITAR ✔
+    const btnEdit = document.createElement("button");
+    btnEdit.className = "btn-edit";
+    btnEdit.textContent = "Editar";
+    btnEdit.addEventListener("click", function () {
+      console.log("EDIT CLICK:", u.id);
+      openEdit(u.id);
+    });
+
+    //  ELIMINAR (FIX REAL)
+    const btnDelete = document.createElement("button");
+    btnDelete.className = "btn-delete";
+    btnDelete.textContent = "Eliminar";
+
+    btnDelete.addEventListener("click", function (e) {
+      e.stopPropagation(); //  evita conflictos
+      console.log("DELETE CLICK:", u.id);
+      deleteUser(u.id);
+    });
+
+    actions.appendChild(btnEdit);
+    actions.appendChild(btnDelete);
+
+    row.appendChild(actions);
+    table.appendChild(row);
+
+  });
 }
 
-
 /* =========================================================
-   BUSCAR USUARIOS (FILTRO EN TIEMPO REAL)
-   ========================================================= */
+   FILTRO DE BÚSQUEDA (ANTI-LAG )
+========================================================= */
+let searchTimeout;
 
 function filterUsers(){
 
-  // Texto ingresado en el buscador
-  const text = document.getElementById("search").value.toLowerCase().trim();
+  clearTimeout(searchTimeout);
 
-  // Filtrar usuarios por username, email o rol
-  const filtered = allUsers.filter(u =>
-    u.username.toLowerCase().includes(text) ||
-    u.email.toLowerCase().includes(text) ||
-    u.role.toLowerCase().includes(text)
-  );
+  searchTimeout = setTimeout(() => {
 
-  // Volver a renderizar con el resultado filtrado
-  renderUsers(filtered);
+    const text = document.getElementById("search").value.toLowerCase().trim();
+
+    const filtered = allUsers.filter(u =>
+      u.username.toLowerCase().includes(text) ||
+      u.email.toLowerCase().includes(text) ||
+      u.role.toLowerCase().includes(text)
+    );
+
+    renderUsers(filtered);
+
+  }, 300);
 }
 
 
 /* =========================================================
-   VALIDACIÓN DE CONTRASEÑA SEGURA
-   ========================================================= */
-
+   VALIDACIÓN DE CONTRASEÑA
+========================================================= */
 function validatePassword(password){
-
-  /*
-    Requisitos:
-    - 14 a 32 caracteres
-    - 1 mayúscula
-    - 1 minúscula
-    - 1 número
-    - 1 caracter especial
-  */
-
   const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{14,32}$/;
-
   return regex.test(password);
 }
 
 
 /* =========================================================
-   CREAR NUEVO USUARIO
-   ========================================================= */
+   LIMPIAR FORMULARIO + BUSCADOR 
+========================================================= */
+function clearForm(){
 
+  document.getElementById("username").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("password").value = "";
+  document.getElementById("confirmPassword").value = "";
+
+  // 🔍 limpiar búsqueda
+  document.getElementById("search").value = "";
+
+  //  recargar lista completa
+  renderUsers(allUsers);
+}
+
+
+/* =========================================================
+   CREAR USUARIO
+========================================================= */
 async function createUser(){
 
   const username = document.getElementById("username").value.trim();
@@ -119,27 +146,23 @@ async function createUser(){
   const password = document.getElementById("password").value;
   const confirm = document.getElementById("confirmPassword").value;
 
-  // Validación básica
   if(!username || !email || !password || !confirm){
     alert("All fields are required");
     return;
   }
 
-  // Confirmación de contraseña
   if(password !== confirm){
     alert("Passwords do not match");
     return;
   }
 
-  // Validación de seguridad
   if(!validatePassword(password)){
-    alert("La contraseña debe tener entre 14 y 32 caracteres, incluyendo mayúsculas, minúsculas, números y caracteres especiales.");
+    alert("La contraseña debe cumplir los requisitos de seguridad.");
     return;
   }
 
-  try{
+  try {
 
-    // Enviar al backend
     await window.api.createUser({
       username,
       email,
@@ -147,45 +170,40 @@ async function createUser(){
       role:"user"
     });
 
-    // Recargar lista
-    loadUsers();
+    await loadUsers();
+    clearForm();
 
-  }catch(error){
-
+  } catch (error){
     console.error(error);
     alert("Error creating user");
-
   }
 }
 
 
 /* =========================================================
-   ABRIR MODAL DE EDICIÓN
-   ========================================================= */
+   ABRIR MODAL EDITAR
+========================================================= */
+function openEdit(id){
 
-function openEdit(user){
+  const user = allUsers.find(u => u.id === id);
+  if(!user) return;
 
-  // Guardar usuario seleccionado
   currentUser = user;
 
-  // Cargar datos en el formulario
   document.getElementById("editUsername").value = user.username;
   document.getElementById("editEmail").value = user.email;
   document.getElementById("editRole").value = user.role;
 
-  // Limpiar contraseñas
   document.getElementById("editPassword").value = "";
   document.getElementById("editConfirm").value = "";
 
-  // Mostrar modal
   document.getElementById("editBox").style.display = "flex";
 }
 
 
 /* =========================================================
-   GUARDAR CAMBIOS DE USUARIO
-   ========================================================= */
-
+   GUARDAR CAMBIOS
+========================================================= */
 async function saveEdit(){
 
   const username = document.getElementById("editUsername").value.trim();
@@ -195,18 +213,13 @@ async function saveEdit(){
   const pass = document.getElementById("editPassword").value;
   const confirm = document.getElementById("editConfirm").value;
 
-  try{
+  try {
 
-    /* ===== ACTUALIZAR DATOS GENERALES ===== */
-
-    await window.api.updateUser({
-      id: currentUser.id,
+    await window.api.updateUser(currentUser.id, {
       username,
       email,
       role
     });
-
-    /* ===== ACTUALIZAR CONTRASEÑA (SI SE INGRESA) ===== */
 
     if(pass){
 
@@ -216,74 +229,56 @@ async function saveEdit(){
       }
 
       if(!validatePassword(pass)){
-        alert("La contraseña debe tener entre 14 y 32 caracteres, incluyendo mayúsculas, minúsculas, números y caracteres especiales.");
+        alert("La contraseña debe cumplir los requisitos de seguridad.");
         return;
       }
 
       await window.api.updateUserPassword(currentUser.id, pass);
     }
 
-    // Cerrar modal
     document.getElementById("editBox").style.display = "none";
+    await loadUsers();
 
-    // Recargar usuarios
-    loadUsers();
-
-  }catch(error){
-
+  } catch (error){
     console.error(error);
     alert("Error updating user");
-
   }
 }
 
 
 /* =========================================================
    CANCELAR EDICIÓN
-   ========================================================= */
-
+========================================================= */
 function cancelEdit(){
-
   document.getElementById("editBox").style.display = "none";
-
+  document.getElementById("editPassword").value = "";
+  document.getElementById("editConfirm").value = "";
 }
 
 
 /* =========================================================
-   ELIMINAR USUARIO (CON PROTECCIÓN MASTER)
-   ========================================================= */
-
+   ELIMINAR USUARIO (CON DEBUG )
+========================================================= */
 async function deleteUser(id){
 
-  const user = allUsers.find(u => u.id === id);
+  try {
 
-  // Protección: no eliminar usuario master
-  if(user.username === "adminew"){
-    alert("No se permite eliminar el usuario master");
-    return;
-  }
+    console.log("Enviando al backend...");
 
-  // Confirmación
-  if(!confirm("¿Eliminar usuario?")) return;
+    const result = await window.api.deleteUser(id);
 
-  try{
+    console.log("Respuesta backend:", result);
 
-    await window.api.deleteUser(id);
+    await loadUsers();
 
-    loadUsers();
-
-  }catch(error){
-
-    console.error(error);
+  } catch (error){
+    console.error("Error deleting user:", error);
     alert("Error deleting user");
-
   }
 }
 
 
 /* =========================================================
-   INICIALIZACIÓN AUTOMÁTICA
-   ========================================================= */
-
-// Cargar usuarios al abrir la pantalla
+   INIT
+========================================================= */
 loadUsers();

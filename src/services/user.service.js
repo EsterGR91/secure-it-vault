@@ -1,35 +1,26 @@
 // ===============================
 // IMPORTACIONES
 // ===============================
-
-//  Función para generar hash seguro de contraseñas (Argon2)
+// Hash seguro de contraseñas
 const { hashPassword } = require('../security/hash');
 
-//  Repositorio de usuarios (acceso directo a DB)
+// Repositorio de usuarios
 const userRepo = require('../db/users.repository');
 
-//  Repositorio de auditoría (registro de acciones)
+// Auditoría
 const auditRepo = require('../db/audit.repository');
+
+//  IMPORTANTE: conexión DB 
+const pool = require('../db/connection');
 
 
 // ===============================
 // CREAR USUARIO
 // ===============================
-
-/**
- * =====================================================
- * CREA UN NUEVO USUARIO EN EL SISTEMA
- * =====================================================
- * - Hashea la contraseña
- * - Inserta en la base de datos
- * - Registra la acción en auditoría
- */
 async function createUser(data, currentUserId) {
 
-  // 1 Generar hash seguro de la contraseña
   const passwordHash = await hashPassword(data.password);
 
-  // 2 Crear usuario en DB
   const id = await userRepo.createUser({
     username: data.username,
     email: data.email,
@@ -37,14 +28,12 @@ async function createUser(data, currentUserId) {
     role: data.role
   });
 
-  // 3 Registrar acción en auditoría
   await auditRepo.logAction(
     currentUserId,
     "CREATE_USER",
     `User ID ${id}`
   );
 
-  // 4 Retornar ID del usuario creado
   return id;
 }
 
@@ -52,60 +41,67 @@ async function createUser(data, currentUserId) {
 // ===============================
 // ACTUALIZAR USUARIO
 // ===============================
-
-/**
- * =====================================================
- * ACTUALIZA DATOS DE UN USUARIO
- * =====================================================
- */
 async function updateUser(id, data, currentUserId) {
 
-  // Actualiza información en DB
   await userRepo.updateUser(id, data);
 
-  // Registrar en auditoría
   await auditRepo.logAction(
     currentUserId,
     "UPDATE_USER",
     `User ID ${id}`
   );
-
 }
 
 
 // ===============================
-// ELIMINAR USUARIO
+// ELIMINAR USUARIO (FIX REAL )
 // ===============================
+async function deleteUser(id, currentUserId){
 
-/**
- * =====================================================
- * ELIMINA UN USUARIO DEL SISTEMA
- * =====================================================
- */
-async function deleteUser(id, currentUserId) {
+  try {
 
-  // Elimina usuario en DB
-  await userRepo.deleteUser(id);
+    console.log("🔥 Eliminando usuario:", id);
 
-  // Registrar en auditoría
-  await auditRepo.logAction(
-    currentUserId,
-    "DELETE_USER",
-    `User ID ${id}`
-  );
+    // 🔥 1. eliminar dependencias
+    await pool.execute(
+      "DELETE FROM secure_it_vault.email_verification_codes WHERE user_id = ?",
+      [id]
+    );
 
+    // 🔥 2. eliminar usuario
+    const [result] = await pool.execute(
+      "DELETE FROM secure_it_vault.users WHERE id = ?",
+      [id]
+    );
+
+    console.log("Resultado SQL:", result);
+
+    if (result.affectedRows === 0) {
+      throw new Error("Usuario no encontrado");
+    }
+
+    // 🔥 3. auditoría segura
+    if(currentUserId){
+      await auditRepo.logAction(
+        currentUserId,
+        "DELETE_USER",
+        `User ID ${id}`
+      );
+    }
+
+    return true;
+
+  } catch (error){
+
+    console.error("Error en deleteUser:", error.message);
+    throw error;
+
+  }
 }
-
 
 // ===============================
 // OBTENER USUARIOS
 // ===============================
-
-/**
- * =====================================================
- * RETORNA TODOS LOS USUARIOS
- * =====================================================
- */
 async function getUsers() {
 
   return await userRepo.getAllUsers();
@@ -114,26 +110,14 @@ async function getUsers() {
 
 
 // ===============================
-//  ACTUALIZAR PASSWORD (NUEVO)
+// ACTUALIZAR PASSWORD
 // ===============================
-
-/**
- * =====================================================
- * ACTUALIZA LA CONTRASEÑA DE UN USUARIO
- * =====================================================
- * - Genera hash seguro
- * - Actualiza en DB
- * - Registra auditoría
- */
 async function updatePassword(id, password, currentUserId) {
 
-  // 1️⃣ Generar hash
   const passwordHash = await hashPassword(password);
 
-  // 2️⃣ Actualizar en DB
   await userRepo.updatePassword(id, passwordHash);
 
-  // 3️⃣ Registrar auditoría
   await auditRepo.logAction(
     currentUserId,
     "UPDATE_PASSWORD",
@@ -147,7 +131,6 @@ async function updatePassword(id, password, currentUserId) {
 // ===============================
 // EXPORTACIONES
 // ===============================
-
 module.exports = {
   createUser,
   updateUser,
