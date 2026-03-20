@@ -1,9 +1,12 @@
+// ===============================
+// IMPORTACIÓN DE CONEXIÓN
+// ===============================
 const pool = require('./connection');
 
-// =======================
-// EXISTENTES (NO BORRAR)
-// =======================
 
+// ===============================
+// CREAR USUARIO
+// ===============================
 async function createUser({ username, email, passwordHash, role = 'user' }) {
 
   const sql = `
@@ -21,17 +24,27 @@ async function createUser({ username, email, passwordHash, role = 'user' }) {
   return result.insertId;
 }
 
+
+// ===============================
+// BUSCAR USUARIO POR USERNAME
+// ===============================
 async function findUserByUsername(username) {
 
+  // Solo usuarios activos
   const sql = `
     SELECT * FROM users
     WHERE username = ? AND is_active = 1
   `;
 
   const [rows] = await pool.execute(sql, [username]);
+
   return rows[0];
 }
 
+
+// ===============================
+// ACTUALIZAR ÚLTIMO LOGIN
+// ===============================
 async function updateLastLogin(userId) {
 
   const sql = `
@@ -44,11 +57,10 @@ async function updateLastLogin(userId) {
 }
 
 
-// =======================
-// NUEVAS FUNCIONES CRUD
-// =======================
-
-async function getAllUsers() {
+// ===============================
+// OBTENER TODOS (SIN FILTRO)
+// ===============================
+async function getAllUsersRaw(){
 
   const [rows] = await pool.execute(`
     SELECT id, username, email, role, is_active, created_at
@@ -59,6 +71,26 @@ async function getAllUsers() {
   return rows;
 }
 
+
+// ===============================
+// OBTENER TODOS LOS USUARIOS ACTIVOS
+// ===============================
+async function getAllUsers() {
+
+  const [rows] = await pool.execute(`
+    SELECT id, username, email, role, is_active, created_at
+    FROM users
+    WHERE is_active = 1
+    ORDER BY created_at DESC
+  `);
+
+  return rows;
+}
+
+
+// ===============================
+// ACTUALIZAR USUARIO
+// ===============================
 async function updateUser(id, { username, email, role }) {
 
   const [result] = await pool.execute(`
@@ -70,6 +102,10 @@ async function updateUser(id, { username, email, role }) {
   return result.affectedRows > 0;
 }
 
+
+// ===============================
+// SOFT DELETE (DESACTIVAR USUARIO)
+// ===============================
 async function deleteUser(id) {
 
   const [result] = await pool.execute(`
@@ -81,9 +117,31 @@ async function deleteUser(id) {
   return result.affectedRows > 0;
 }
 
-// =====================================================
+
+// ===============================
+//  ACTIVAR / DESACTIVAR USUARIO (NUEVO)
+// ===============================
+async function toggleUser(id, state){
+
+  /*
+    state:
+    true  → activar (1)
+    false → desactivar (0)
+  */
+
+  const [result] = await pool.execute(`
+    UPDATE users
+    SET is_active = ?
+    WHERE id = ?
+  `, [state ? 1 : 0, id]);
+
+  return result.affectedRows > 0;
+}
+
+
+// ===============================
 // ACTUALIZAR PASSWORD
-// =====================================================
+// ===============================
 async function updatePassword(id, passwordHash){
 
   const sql = `
@@ -93,19 +151,20 @@ async function updatePassword(id, passwordHash){
   `;
 
   await pool.execute(sql, [passwordHash, id]);
-
 }
-// =======================
-// EXPORTS
-// =======================
 
+
+// ===============================
+// EXPORTACIONES
+// ===============================
 module.exports = {
   createUser,
   findUserByUsername,
   updateLastLogin,
-  updatePassword,  
-
+  updatePassword,
   getAllUsers,
   updateUser,
-  deleteUser
+  deleteUser,
+  getAllUsersRaw,
+  toggleUser //
 };

@@ -1,17 +1,9 @@
 // ===============================
 // IMPORTACIONES
 // ===============================
-// Hash seguro de contraseñas
 const { hashPassword } = require('../security/hash');
-
-// Repositorio de usuarios
 const userRepo = require('../db/users.repository');
-
-// Auditoría
 const auditRepo = require('../db/audit.repository');
-
-//  IMPORTANTE: conexión DB 
-const pool = require('../db/connection');
 
 
 // ===============================
@@ -28,6 +20,7 @@ async function createUser(data, currentUserId) {
     role: data.role
   });
 
+  // Auditoría
   await auditRepo.logAction(
     currentUserId,
     "CREATE_USER",
@@ -39,73 +32,79 @@ async function createUser(data, currentUserId) {
 
 
 // ===============================
+// ACTIVAR / DESACTIVAR USUARIO
+// ===============================
+async function toggleUser(id, state){
+
+  /*
+    Delega al repository
+    state:
+      true  → activo
+      false → inactivo
+  */
+
+  const result = await userRepo.toggleUser(id, state);
+
+  // Auditoría
+  await auditRepo.logAction(
+    null,
+    state ? "ACTIVATE_USER" : "DEACTIVATE_USER",
+    `User ID ${id}`
+  );
+
+  return result;
+}
+
+
+// ===============================
 // ACTUALIZAR USUARIO
 // ===============================
 async function updateUser(id, data, currentUserId) {
 
-  await userRepo.updateUser(id, data);
+  const result = await userRepo.updateUser(id, data);
 
   await auditRepo.logAction(
     currentUserId,
     "UPDATE_USER",
     `User ID ${id}`
   );
+
+  return result;
 }
 
-
-// ===============================
-// ELIMINAR USUARIO (FIX REAL )
-// ===============================
-async function deleteUser(id, currentUserId){
-
-  try {
-
-    console.log("🔥 Eliminando usuario:", id);
-
-    // 🔥 1. eliminar dependencias
-    await pool.execute(
-      "DELETE FROM secure_it_vault.email_verification_codes WHERE user_id = ?",
-      [id]
-    );
-
-    // 🔥 2. eliminar usuario
-    const [result] = await pool.execute(
-      "DELETE FROM secure_it_vault.users WHERE id = ?",
-      [id]
-    );
-
-    console.log("Resultado SQL:", result);
-
-    if (result.affectedRows === 0) {
-      throw new Error("Usuario no encontrado");
-    }
-
-    // 🔥 3. auditoría segura
-    if(currentUserId){
-      await auditRepo.logAction(
-        currentUserId,
-        "DELETE_USER",
-        `User ID ${id}`
-      );
-    }
-
-    return true;
-
-  } catch (error){
-
-    console.error("Error en deleteUser:", error.message);
-    throw error;
-
-  }
-}
 
 // ===============================
 // OBTENER USUARIOS
 // ===============================
-async function getUsers() {
+async function getUsers(showInactive = false){
+
+  /*
+    showInactive = true  → todos
+    showInactive = false → solo activos
+  */
+
+  if(showInactive){
+    return await userRepo.getAllUsersRaw();
+  }
 
   return await userRepo.getAllUsers();
+}
 
+
+// ===============================
+// ELIMINAR USUARIO (SOFT DELETE)
+// ===============================
+async function deleteUser(id, currentUserId){
+
+  const result = await userRepo.deleteUser(id);
+
+  await auditRepo.logAction(
+    currentUserId,
+    "DEACTIVATE_USER",
+    `User ID ${id}`
+  );
+
+  return result;
 }
 
 
@@ -129,12 +128,13 @@ async function updatePassword(id, password, currentUserId) {
 
 
 // ===============================
-// EXPORTACIONES
+// EXPORTS
 // ===============================
 module.exports = {
   createUser,
+  toggleUser,
   updateUser,
-  deleteUser,
   getUsers,
-  updatePassword 
+  deleteUser,
+  updatePassword
 };

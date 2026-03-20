@@ -6,7 +6,7 @@
 
 <style>
 
-/* ===== GENERAL ===== */
+/* GENERAL */
 body{
   margin:0;
   font-family:'Segoe UI';
@@ -15,12 +15,12 @@ body{
   padding:30px;
 }
 
-/* ===== HEADER ===== */
+/* HEADER */
 .header-center{text-align:center;}
 .header-center img{width:140px;margin-bottom:15px;}
 h2{margin-bottom:20px;}
 
-/* ===== BOTONES SUPERIORES ===== */
+/* BOTONES SUPERIORES */
 .top-actions{
   position:absolute;
   top:20px;
@@ -41,7 +41,7 @@ h2{margin-bottom:20px;}
 .btn-back{background:#64748b;color:white;}
 .btn-logout{background:#ef4444;color:white;}
 
-/* ===== FORM ===== */
+/* FORMULARIO */
 .form{
   display:flex;
   gap:10px;
@@ -49,36 +49,37 @@ h2{margin-bottom:20px;}
   flex-wrap:wrap;
 }
 
-/* INPUT CON ICONO 👁 */
 .input-group{position:relative;}
 
 .input-group input{
   padding:12px;
+  padding-right:45px;
   border-radius:10px;
   border:none;
   background:#1e293b;
   color:white;
-  padding-right:40px;
 }
 
 .eye-icon{
   position:absolute;
-  right:10px;
+  right:12px;
   top:50%;
   transform:translateY(-50%);
   cursor:pointer;
+  font-size:12px;
+  color:#94a3b8;
 }
 
-/* BOTONES */
-.btn-create{
-  background:#22c55e;
+.btn-create{background:#22c55e;}
+.btn-clear{background:#475569;}
+
+/* CHECKBOX */
+.toggle-box{
+  text-align:center;
+  margin-top:15px;
 }
 
-.btn-clear{
-  background:#475569;
-}
-
-/* ===== BUSCADOR ===== */
+/* BUSCADOR */
 .search-box{
   position:relative;
   width:250px;
@@ -99,9 +100,11 @@ h2{margin-bottom:20px;}
   left:12px;
   top:50%;
   transform:translateY(-50%);
+  font-size:14px;
+  color:#94a3b8;
 }
 
-/* ===== TABLA ===== */
+/* TABLA */
 table{width:100%;margin-top:20px;}
 td,th{padding:12px;}
 
@@ -119,7 +122,7 @@ td,th{padding:12px;}
   border-radius:8px;
 }
 
-/* ===== MODAL PRO  ===== */
+/* MODAL */
 .edit-modal{
   position:fixed;
   top:0;
@@ -130,7 +133,6 @@ td,th{padding:12px;}
   justify-content:center;
   align-items:center;
   background:rgba(0,0,0,0.7);
-  z-index:9999;
 }
 
 .edit-content{
@@ -160,14 +162,13 @@ td,th{padding:12px;}
 .cancel-btn{background:#ef4444;}
 
 </style>
-
 </head>
 
 <body>
 
 <!-- BOTONES -->
 <div class="top-actions">
-  <button class="btn btn-back" onclick="goBack()">⬅</button>
+  <button class="btn btn-back" onclick="goBack()">Volver</button>
   <button class="btn btn-logout" onclick="logout()">Salir</button>
 </div>
 
@@ -177,7 +178,7 @@ td,th{padding:12px;}
   <h2>Usuarios</h2>
 </div>
 
-<!-- FORM -->
+<!-- FORMULARIO -->
 <div class="form">
 
   <input id="username" placeholder="Username">
@@ -185,17 +186,25 @@ td,th{padding:12px;}
 
   <div class="input-group">
     <input id="password" type="password" placeholder="Password">
-    <span class="eye-icon" onclick="togglePassword('password')">👁</span>
+    <span class="eye-icon" onclick="togglePassword('password')">Ver</span>
   </div>
 
   <div class="input-group">
     <input id="confirmPassword" type="password" placeholder="Repeat Password">
-    <span class="eye-icon" onclick="togglePassword('confirmPassword')">👁</span>
+    <span class="eye-icon" onclick="togglePassword('confirmPassword')">Ver</span>
   </div>
 
   <button class="btn btn-create" onclick="createUser()">Crear</button>
   <button class="btn btn-clear" onclick="clearForm()">Limpiar</button>
 
+</div>
+
+<!-- CHECKBOX (CLAVE DEL PROBLEMA) -->
+<div class="toggle-box">
+  <label>
+    <input type="checkbox" id="showInactive" onchange="loadUsers()">
+    Mostrar usuarios desactivados
+  </label>
 </div>
 
 <!-- BUSCADOR -->
@@ -212,6 +221,7 @@ td,th{padding:12px;}
 <th>Username</th>
 <th>Email</th>
 <th>Role</th>
+<th>Estado</th> 
 <th>Acciones</th>
 </tr>
 </thead>
@@ -234,12 +244,12 @@ td,th{padding:12px;}
 
     <div class="input-group">
       <input id="editPassword" type="password" placeholder="Nueva contraseña">
-      <span class="eye-icon" onclick="togglePassword('editPassword')">👁</span>
+      <span class="eye-icon" onclick="togglePassword('editPassword')">Ver</span>
     </div>
 
     <div class="input-group">
       <input id="editConfirm" type="password" placeholder="Repetir contraseña">
-      <span class="eye-icon" onclick="togglePassword('editConfirm')">👁</span>
+      <span class="eye-icon" onclick="togglePassword('editConfirm')">Ver</span>
     </div>
 
     <div class="modal-actions">
@@ -250,17 +260,16 @@ td,th{padding:12px;}
   </div>
 </div>
 
+<!-- SCRIPTS -->
 <script src="users.js"></script>
 
 <script>
 
-/* 👁 TOGGLE PASSWORD */
 function togglePassword(id){
   const input = document.getElementById(id);
   input.type = input.type === "password" ? "text" : "password";
 }
 
-/* NAV */
 function goBack(){
   window.location.href="dashboard.html";
 }
@@ -269,6 +278,9 @@ function logout(){
   localStorage.clear();
   window.location.href="login.html";
 }
+
+// IMPORTANTE: cargar usuarios al inicio
+window.onload = loadUsers;
 
 </script>
 

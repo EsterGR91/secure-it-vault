@@ -1,92 +1,156 @@
-
 // @ts-nocheck
 
-/* =========================================================
+/* ===============================
    VARIABLES GLOBALES
-========================================================= */
+=============================== */
 let allUsers = [];
 let currentUser = null;
 
 
-/* =========================================================
-   CARGAR USUARIOS
-========================================================= */
+/* ===============================
+   CARGAR USUARIOS (CON FILTRO)
+=============================== */
 async function loadUsers(){
+
   try {
 
-    console.log("Cargando usuarios...");
+    const showInactive = document.getElementById("showInactive")?.checked;
 
-    const table = document.getElementById("table");
-    table.innerHTML = "<tr><td colspan='5'>Cargando...</td></tr>";
+    let users = await window.api.getUsersFull();
 
-    // Obtener usuarios desde backend
-    allUsers = await window.api.getUsersFull();
+    // filtrar activos si no está marcado
+    if(!showInactive){
+      users = users.filter(u => u.is_active === 1);
+    }
 
-    console.log("Usuarios cargados:", allUsers);
+    allUsers = users;
 
-    // Renderizar
-    renderUsers(allUsers);
+    renderUsers(users);
 
   } catch (error){
     console.error("Error loading users:", error);
   }
 }
 
+// Función que se ejecuta cuando se quiere activar o desactivar un usuario
+// Recibe el id del usuario y el nuevo estado (activo / inactivo)
 
-/* =========================================================
-   RENDERIZAR USUARIOS (FIX BOTONES )
-========================================================= */
+async function toggleUser(id, state){
+
+  // Llama a la función expuesta en el preload (window.api)
+  // que a su vez envía la solicitud al proceso principal mediante IPC
+  await window.api.toggleUser(id, state);
+
+  // Después de actualizar el estado en la base de datos,
+  // vuelvo a cargar la lista para reflejar el cambio en la interfaz
+  loadUsers();
+}
+
+/* ===============================
+   RENDERIZAR
+=============================== */
 function renderUsers(users){
 
   const table = document.getElementById("table");
+
+  // limpiar tabla
   table.innerHTML = "";
 
   users.forEach(u => {
 
     const row = document.createElement("tr");
 
+    // ===============================
+    // ESTADO TEXTO (NUEVO)
+    // ===============================
+    const estado = u.is_active === 1 ? "Activo" : "Inactivo";
+
+    // ===============================
+    // ESTILO VISUAL INACTIVOS
+    // ===============================
+    if(u.is_active === 0){
+      row.style.opacity = "0.5";
+    }
+
+    // ===============================
+    // COLUMNAS (AQUÍ ESTABA EL ERROR)
+    // AGREGA <td>${estado}</td>
+    // ===============================
     row.innerHTML = `
       <td>${u.id}</td>
       <td>${u.username}</td>
       <td>${u.email}</td>
       <td>${u.role}</td>
+      <td>${estado}</td> <!-- NUEVA COLUMNA -->
     `;
 
+    // ===============================
+    // ACCIONES
+    // ===============================
     const actions = document.createElement("td");
     actions.className = "actions";
 
-    // EDITAR ✔
+    // botón editar
     const btnEdit = document.createElement("button");
     btnEdit.className = "btn-edit";
     btnEdit.textContent = "Editar";
-    btnEdit.addEventListener("click", function () {
-      console.log("EDIT CLICK:", u.id);
-      openEdit(u.id);
-    });
+    btnEdit.onclick = () => openEdit(u.id);
 
-    //  ELIMINAR (FIX REAL)
-    const btnDelete = document.createElement("button");
-    btnDelete.className = "btn-delete";
-    btnDelete.textContent = "Eliminar";
+    // ===============================
+    // BOTÓN DINÁMICO ACTIVO / INACTIVO
+    // ===============================
+    const btnToggle = document.createElement("button");
 
-    btnDelete.addEventListener("click", function (e) {
-      e.stopPropagation(); //  evita conflictos
-      console.log("DELETE CLICK:", u.id);
-      deleteUser(u.id);
-    });
+    if(u.is_active === 1){
 
+      btnToggle.className = "btn-delete";
+      btnToggle.textContent = "Desactivar";
+      btnToggle.onclick = () => confirmAction(u, false);
+
+    }else{
+
+      btnToggle.className = "btn-create";
+      btnToggle.textContent = "Activar";
+      btnToggle.onclick = () => confirmAction(u, true);
+    }
+
+    // agregar botones
     actions.appendChild(btnEdit);
-    actions.appendChild(btnDelete);
+    actions.appendChild(btnToggle);
 
+    // agregar columna acciones
     row.appendChild(actions);
-    table.appendChild(row);
 
+    // agregar fila a la tabla
+    table.appendChild(row);
   });
 }
 
-/* =========================================================
-   FILTRO DE BÚSQUEDA (ANTI-LAG )
-========================================================= */
+/* ===============================
+   ACTIVAR / DESACTIVAR
+=============================== */
+async function confirmAction(user, activate){
+
+  const action = activate ? "activar" : "desactivar";
+
+  if(!confirm(`Seguro que deseas ${action} a ${user.username}?`)) return;
+
+  const currentId = localStorage.getItem("userId");
+
+  if(!activate && Number(currentId) === user.id){
+    alert("No puedes desactivarte a ti mismo");
+    return;
+  }
+
+  await window.api.toggleUser(user.id, activate);
+
+  await loadUsers();
+}
+
+
+/* ===============================
+   FILTRO
+=============================== */
 let searchTimeout;
 
 function filterUsers(){
@@ -95,7 +159,7 @@ function filterUsers(){
 
   searchTimeout = setTimeout(() => {
 
-    const text = document.getElementById("search").value.toLowerCase().trim();
+    const text = document.getElementById("search").value.toLowerCase();
 
     const filtered = allUsers.filter(u =>
       u.username.toLowerCase().includes(text) ||
@@ -109,36 +173,33 @@ function filterUsers(){
 }
 
 
-/* =========================================================
-   VALIDACIÓN DE CONTRASEÑA
-========================================================= */
+/* ===============================
+   VALIDACIÓN PASSWORD
+=============================== */
 function validatePassword(password){
   const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{14,32}$/;
   return regex.test(password);
 }
 
 
-/* =========================================================
-   LIMPIAR FORMULARIO + BUSCADOR 
-========================================================= */
+/* ===============================
+   LIMPIAR
+=============================== */
 function clearForm(){
 
   document.getElementById("username").value = "";
   document.getElementById("email").value = "";
   document.getElementById("password").value = "";
   document.getElementById("confirmPassword").value = "";
-
-  // 🔍 limpiar búsqueda
   document.getElementById("search").value = "";
 
-  //  recargar lista completa
   renderUsers(allUsers);
 }
 
 
-/* =========================================================
-   CREAR USUARIO
-========================================================= */
+/* ===============================
+   CREAR
+=============================== */
 async function createUser(){
 
   const username = document.getElementById("username").value.trim();
@@ -157,32 +218,20 @@ async function createUser(){
   }
 
   if(!validatePassword(password)){
-    alert("La contraseña debe cumplir los requisitos de seguridad.");
+    alert("Password does not meet security requirements");
     return;
   }
 
-  try {
+  await window.api.createUser({username,email,password,role:"user"});
 
-    await window.api.createUser({
-      username,
-      email,
-      password,
-      role:"user"
-    });
-
-    await loadUsers();
-    clearForm();
-
-  } catch (error){
-    console.error(error);
-    alert("Error creating user");
-  }
+  await loadUsers();
+  clearForm();
 }
 
 
-/* =========================================================
-   ABRIR MODAL EDITAR
-========================================================= */
+/* ===============================
+   EDITAR
+=============================== */
 function openEdit(id){
 
   const user = allUsers.find(u => u.id === id);
@@ -194,16 +243,13 @@ function openEdit(id){
   document.getElementById("editEmail").value = user.email;
   document.getElementById("editRole").value = user.role;
 
-  document.getElementById("editPassword").value = "";
-  document.getElementById("editConfirm").value = "";
-
   document.getElementById("editBox").style.display = "flex";
 }
 
 
-/* =========================================================
-   GUARDAR CAMBIOS
-========================================================= */
+/* ===============================
+   GUARDAR
+=============================== */
 async function saveEdit(){
 
   const username = document.getElementById("editUsername").value.trim();
@@ -213,72 +259,37 @@ async function saveEdit(){
   const pass = document.getElementById("editPassword").value;
   const confirm = document.getElementById("editConfirm").value;
 
-  try {
+  await window.api.updateUser(currentUser.id,{username,email,role});
 
-    await window.api.updateUser(currentUser.id, {
-      username,
-      email,
-      role
-    });
+  if(pass){
 
-    if(pass){
-
-      if(pass !== confirm){
-        alert("Passwords do not match");
-        return;
-      }
-
-      if(!validatePassword(pass)){
-        alert("La contraseña debe cumplir los requisitos de seguridad.");
-        return;
-      }
-
-      await window.api.updateUserPassword(currentUser.id, pass);
+    if(pass !== confirm){
+      alert("Passwords do not match");
+      return;
     }
 
-    document.getElementById("editBox").style.display = "none";
-    await loadUsers();
+    if(!validatePassword(pass)){
+      alert("Password not valid");
+      return;
+    }
 
-  } catch (error){
-    console.error(error);
-    alert("Error updating user");
+    await window.api.updateUserPassword(currentUser.id, pass);
   }
+
+  document.getElementById("editBox").style.display = "none";
+  await loadUsers();
 }
 
 
-/* =========================================================
-   CANCELAR EDICIÓN
-========================================================= */
+/* ===============================
+   CANCELAR
+=============================== */
 function cancelEdit(){
   document.getElementById("editBox").style.display = "none";
-  document.getElementById("editPassword").value = "";
-  document.getElementById("editConfirm").value = "";
 }
 
 
-/* =========================================================
-   ELIMINAR USUARIO (CON DEBUG )
-========================================================= */
-async function deleteUser(id){
-
-  try {
-
-    console.log("Enviando al backend...");
-
-    const result = await window.api.deleteUser(id);
-
-    console.log("Respuesta backend:", result);
-
-    await loadUsers();
-
-  } catch (error){
-    console.error("Error deleting user:", error);
-    alert("Error deleting user");
-  }
-}
-
-
-/* =========================================================
+/* ===============================
    INIT
-========================================================= */
+=============================== */
 loadUsers();

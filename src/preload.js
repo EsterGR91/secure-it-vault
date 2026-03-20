@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
-// Permite comunicar el frontend con el proceso principal de forma segura
 
+// Expone funciones seguras al frontend
 contextBridge.exposeInMainWorld('api', {
 
   /**
@@ -11,69 +11,91 @@ contextBridge.exposeInMainWorld('api', {
   login: (username, password) =>
     ipcRenderer.invoke('login', username, password),
 
-  /**
-   * =====================================================
-   * USERS (MÉTODO SIMPLE QUE YA TENÍAS)
-   * =====================================================
-   */
-  getUsers: () =>
-    ipcRenderer.invoke('get-users'),
 
   /**
    * =====================================================
-   * 🔥 USERS (CRUD COMPLETO - NUEVO)
+   * USERS - OBTENER LISTA
+   * =====================================================
+   * showInactive:
+   *   true  → trae todos
+   *   false → solo activos
+   */
+  getUsersFull: (showInactive = false) =>
+    ipcRenderer.invoke('users:get', showInactive),
+
+
+  /**
+   * =====================================================
+   * USERS - CREAR
    * =====================================================
    */
-
-  // Obtener lista completa desde el nuevo servicio
-  getUsersFull: () =>
-    ipcRenderer.invoke('users:get'),
-
-  // Crear usuario
   createUser: (data) =>
     ipcRenderer.invoke('users:create', data),
 
-  // Actualizar usuario
-  updateUser: (id, data) =>
-    ipcRenderer.invoke('users:update', id, data),
-
-  // Eliminar usuario
-  deleteUser: (id) =>
-    ipcRenderer.invoke('users:delete', id),
 
   /**
    * =====================================================
-   * 🔐 ACTUALIZAR PASSWORD DE USUARIO (NUEVO)
+   * USERS - ACTUALIZAR
    * =====================================================
-   * Permite cambiar la contraseña de un usuario específico
-   * desde el dashboard o panel admin
+   */
+  updateUser: (id, data) =>
+    ipcRenderer.invoke('users:update', id, data),
+
+
+  /**
+   * =====================================================
+   * USERS - ELIMINAR (SOFT DELETE)
+   * =====================================================
+   */
+  deleteUser: (id) =>
+    ipcRenderer.invoke('users:delete', id),
+
+
+  /**
+   * =====================================================
+   * USERS - ACTIVAR / DESACTIVAR
+   * =====================================================
+   * Llama al handler "toggle-user" en main.js
+   */
+  toggleUser: (id, state) =>
+    ipcRenderer.invoke('toggle-user', id, state),
+
+
+  /**
+   * =====================================================
+   * ACTUALIZAR PASSWORD (ADMIN)
+   * =====================================================
    */
   updateUserPassword: (id, pass) =>
     ipcRenderer.invoke('updateUserPassword', id, pass),
 
+
   /**
    * =====================================================
-   * VERIFICACIÓN MFA
+   * MFA
    * =====================================================
    */
   verifyCode: (code) =>
     ipcRenderer.invoke('verify-code', code),
 
+
   /**
    * =====================================================
-   * LISTAR CREDENCIALES
+   * CREDENCIALES
    * =====================================================
    */
   listCredentials: (vaultId) =>
     ipcRenderer.invoke('list-credentials', vaultId),
 
+
   /**
    * =====================================================
-   * RECUPERAR CONTRASEÑA
+   * RECUPERAR PASSWORD
    * =====================================================
    */
   recoverPassword: (userInput) =>
     ipcRenderer.invoke('recover-password', userInput),
+
 
   /**
    * =====================================================
