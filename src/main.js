@@ -43,7 +43,7 @@ app.commandLine.appendSwitch("force-device-scale-factor", "1");
 
 
 // ===============================
-// CREAR VENTANA PRINCIPAL
+// CREAR VENTANA
 // ===============================
 function createWindow() {
 
@@ -78,7 +78,7 @@ ipcMain.handle('login', async (event, username, password) => {
 
 
 // ===============================
-// MFA - VERIFICACIÓN DE CÓDIGO
+// MFA
 // ===============================
 ipcMain.handle('verify-code', async (event, code) => {
 
@@ -118,15 +118,9 @@ ipcMain.handle('recover-password', async (event, userInput) => {
 
 
 // ===============================
-// TOGGLE USUARIO (ACTIVAR / DESACTIVAR)
+// TOGGLE USER
 // ===============================
 ipcMain.handle("toggle-user", async (event, id, state) => {
-
-  /*
-    Este handler recibe la solicitud desde el frontend
-    y delega la lógica al service (arquitectura correcta).
-    Evita acceso directo a base de datos desde aquí.
-  */
 
   console.log("Toggle usuario:", id, state);
 
@@ -135,7 +129,7 @@ ipcMain.handle("toggle-user", async (event, id, state) => {
 
 
 // ===============================
-// RESET PASSWORD (RECUPERACIÓN)
+// RESET PASSWORD
 // ===============================
 ipcMain.handle('reset-password', async (event, password) => {
 
@@ -155,56 +149,27 @@ ipcMain.handle('reset-password', async (event, password) => {
 
 
 // ===============================
-// USERS - LISTAR
+// USERS
 // ===============================
 ipcMain.handle('users:get', async (e, showInactive) => {
-
-  /*
-    showInactive = true  → trae todos
-    showInactive = false → solo activos
-  */
-
   return await userService.getUsers(showInactive);
 });
 
-
-// ===============================
-// USERS - CREAR
-// ===============================
 ipcMain.handle('users:create', async (e, data) => {
 
-  if (!currentUserId) {
-    console.warn("No hay usuario en sesión");
-    currentUserId = 1;
-  }
+  if (!currentUserId) currentUserId = 1;
 
   return await userService.createUser(data, currentUserId);
 });
 
-
-// ===============================
-// USERS - ACTUALIZAR
-// ===============================
 ipcMain.handle('users:update', async (e, id, data) => {
-
   return await userService.updateUser(id, data, currentUserId);
 });
 
-
-// ===============================
-// USERS - ELIMINAR (SOFT DELETE)
-// ===============================
 ipcMain.handle('users:delete', async (e, id) => {
-
-  console.log("Desactivando usuario:", id);
-
   return await userService.deleteUser(id, currentUserId);
 });
 
-
-// ===============================
-// ACTUALIZAR PASSWORD (ADMIN)
-// ===============================
 ipcMain.handle('updateUserPassword', async (e, id, pass) => {
 
   const hashedPassword = await hashPassword(pass);
@@ -217,9 +182,18 @@ ipcMain.handle('updateUserPassword', async (e, id, pass) => {
   return true;
 });
 
+
 // ===============================
-// VAULTS - LISTAR
+// VAULTS (ARREGLADO COMPLETO)
 // ===============================
+
+/*
+  IMPORTANTE:
+  - SOLO existe UN handler por acción
+  - usamos currentUserId (no global)
+*/
+
+// LISTAR
 ipcMain.handle('vaults:get', async () => {
 
   if (!currentUserId) return [];
@@ -228,20 +202,34 @@ ipcMain.handle('vaults:get', async () => {
 });
 
 
-// ===============================
-// VAULTS - CREAR
-// ===============================
-ipcMain.handle('vaults:create', async (e, data) => {
+// CREAR
+ipcMain.handle('vaults:create', async (event, data) => {
 
-  if (!currentUserId) {
-    console.warn("No hay usuario en sesión");
-    return null;
-  }
+  if (!currentUserId) throw new Error("No session");
 
   return await vaultService.createVault(data, currentUserId);
 });
 
+
+// ACTUALIZAR
+ipcMain.handle('vaults:update', async (event, id, data) => {
+
+  if (!currentUserId) throw new Error("No session");
+
+  return await vaultService.updateVault(id, data, currentUserId);
+});
+
+
+// ELIMINAR
+ipcMain.handle('vaults:delete', async (event, id) => {
+
+  if (!currentUserId) throw new Error("No session");
+
+  return await vaultService.deleteVault(id, currentUserId);
+});
+
+
 // ===============================
-// INICIALIZACIÓN DE LA APP
+// INICIO APP
 // ===============================
 app.whenReady().then(createWindow);

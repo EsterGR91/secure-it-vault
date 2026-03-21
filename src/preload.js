@@ -2,14 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // Expone funciones seguras al frontend
 contextBridge.exposeInMainWorld('api', {
-// ===============================
-// VAULTS
-// ===============================
-getVaults: () =>
-  ipcRenderer.invoke('vaults:get'),
 
-createVault: (data) =>
-  ipcRenderer.invoke('vaults:create', data),
   /**
    * =====================================================
    * LOGIN
@@ -23,9 +16,6 @@ createVault: (data) =>
    * =====================================================
    * USERS - OBTENER LISTA
    * =====================================================
-   * showInactive:
-   *   true  → trae todos
-   *   false → solo activos
    */
   getUsersFull: (showInactive = false) =>
     ipcRenderer.invoke('users:get', showInactive),
@@ -51,7 +41,7 @@ createVault: (data) =>
 
   /**
    * =====================================================
-   * USERS - ELIMINAR (SOFT DELETE)
+   * USERS - ELIMINAR
    * =====================================================
    */
   deleteUser: (id) =>
@@ -62,7 +52,6 @@ createVault: (data) =>
    * =====================================================
    * USERS - ACTIVAR / DESACTIVAR
    * =====================================================
-   * Llama al handler "toggle-user" en main.js
    */
   toggleUser: (id, state) =>
     ipcRenderer.invoke('toggle-user', id, state),
@@ -110,6 +99,29 @@ createVault: (data) =>
    * =====================================================
    */
   resetPassword: (password) =>
-    ipcRenderer.invoke('reset-password', password)
+    ipcRenderer.invoke('reset-password', password),
+
+
+  /**
+   * =====================================================
+   * VAULTS (NUEVO - SOLO ESTO SE AGREGÓ)
+   * =====================================================
+   */
+
+  // Obtener vaults
+  getVaults: () =>
+    ipcRenderer.invoke('vaults:get'),
+
+  // Crear vault
+  createVault: (data) =>
+    ipcRenderer.invoke('vaults:create', data),
+
+  // Actualizar vault
+  updateVault: (id, data) =>
+    ipcRenderer.invoke('vaults:update', id, data),
+
+  // Eliminar vault
+  deleteVault: (id) =>
+    ipcRenderer.invoke('vaults:delete', id)
 
 });

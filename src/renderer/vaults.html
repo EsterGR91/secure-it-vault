@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 <head>
 <meta charset="UTF-8">
@@ -19,23 +18,14 @@ body{
 }
 
 /* ===============================
-   HEADER CENTRADO (LOGO + TÍTULO)
+   HEADER
 =============================== */
-.header-center{
-  text-align:center;
-}
-
-.header-center img{
-  width:140px;
-  margin-bottom:15px;
-}
-
-h2{
-  margin-bottom:20px;
-}
+.header-center{text-align:center;}
+.header-center img{width:140px;margin-bottom:15px;}
+h2{margin-bottom:20px;}
 
 /* ===============================
-   BOTONES SUPERIORES (VOLVER / SALIR)
+   BOTONES SUPERIORES
 =============================== */
 .top-actions{
   position:absolute;
@@ -43,7 +33,6 @@ h2{
   right:20px;
 }
 
-/* estilo base de botones */
 .btn{
   padding:10px 16px;
   border-radius:10px;
@@ -53,18 +42,15 @@ h2{
   transition:0.2s;
 }
 
-.btn:hover{
-  transform:scale(1.05);
-}
+.btn:hover{transform:scale(1.05);}
 
-/* colores */
 .btn-back{background:#64748b;color:white;}
 .btn-logout{background:#ef4444;color:white;}
 .btn-create{background:#22c55e;color:white;}
 .btn-clear{background:#475569;color:white;}
 
 /* ===============================
-   FORMULARIO CREAR VAULT
+   FORMULARIO
 =============================== */
 .form{
   display:flex;
@@ -105,148 +91,138 @@ input{
   left:12px;
   top:50%;
   transform:translateY(-50%);
-  color:#94a3b8;
 }
 
 /* ===============================
-   TABLA
+   GRID DE VAULTS (tipo notas)
 =============================== */
-table{
-  width:100%;
+.vault-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
+  gap:15px;
   margin-top:20px;
 }
 
-td,th{
-  padding:12px;
+/* tarjeta */
+.vault-card{
+  background:#1e293b;
+  padding:15px;
+  border-radius:12px;
+  position:relative;
+  box-shadow:0 0 10px rgba(0,0,0,0.4);
 }
 
-</style>
+/* título */
+.vault-title{
+  font-weight:bold;
+  font-size:16px;
+}
 
+/* descripción */
+.vault-desc{
+  font-size:13px;
+  color:#94a3b8;
+  margin-top:5px;
+}
+
+/* fecha */
+.vault-date{
+  font-size:11px;
+  margin-top:10px;
+  color:#64748b;
+}
+
+/* menú */
+.menu{
+  position:absolute;
+  top:10px;
+  right:10px;
+  cursor:pointer;
+}
+
+/* dropdown */
+.menu-options{
+  position:absolute;
+  top:30px;
+  right:10px;
+  background:#020617;
+  border-radius:8px;
+  display:none;
+}
+
+.menu-options button{
+  display:block;
+  width:100%;
+  background:none;
+  border:none;
+  color:white;
+  padding:8px;
+  cursor:pointer;
+}
+
+.menu-options button:hover{
+  background:#334155;
+}
+
+/* ===============================
+   ESTILO PARA NOTAS DEL VAULT
+=============================== */
+
+.vault-note{
+  width:100%;                 /* Ocupa todo el ancho disponible */
+  min-height:80px;            /* Altura mínima para que siempre sea visible */
+  margin-top:10px;            /* Separación superior respecto a otros elementos */
+  background:#0f172a;         /* Fondo oscuro acorde al tema del sistema */
+  border:none;                /* Sin borde por defecto */
+  color:white;                /* Texto en blanco */
+  resize:vertical;            /* Permite redimensionar solo verticalmente */
+  padding:10px;               /* Espaciado interno más cómodo para escribir */
+  border-radius:8px;          /* Bordes redondeados */
+  transition:0.2s;            /* Transición suave para efectos visuales */
+}
+
+/* Estilo cuando el usuario hace foco en la nota */
+.vault-note:focus{
+  outline:2px solid #22c55e;   /* Resalta con borde verde cuando está activa */
+  background:#020617;         /* Fondo un poco más oscuro al escribir */
+}
+
+
+</style>
 </head>
 
 <body>
 
-<!-- ===============================
-     BOTONES SUPERIORES
-=============================== -->
-
 <div class="top-actions">
-
-  <!-- botón para volver al dashboard -->
-
-  <button class="btn btn-back" onclick="goBack()">
-    Volver
-  </button>
-
-  <!-- botón para cerrar sesión -->
-
-  <button class="btn btn-logout" onclick="logout()">
-    Salir
-  </button>
-
+  <button class="btn btn-back" onclick="goBack()">Volver</button>
+  <button class="btn btn-logout" onclick="logout()">Salir</button>
 </div>
-
-<!-- ===============================
-     HEADER (LOGO + TÍTULO)
-=============================== -->
 
 <div class="header-center">
-
-  <!-- logo del sistema -->
-
   <img src="./assets/logo.jpeg">
-
   <h2>Vaults</h2>
-
 </div>
-
-<!-- ===============================
-     FORMULARIO CREAR VAULT
-=============================== -->
 
 <div class="form">
-
-  <!-- nombre del vault -->
-
   <input id="name" placeholder="Nombre del Vault">
-
-  <!-- descripción -->
-
   <input id="description" placeholder="Descripción">
-
-  <!-- botón crear -->
-
-  <button class="btn btn-create" onclick="createVault()">
-    Crear
-  </button>
-
-  <!-- botón limpiar -->
-
-  <button class="btn btn-clear" onclick="clearForm()">
-    Limpiar
-  </button>
-
+  <button class="btn btn-create" onclick="createVault()">Crear</button>
+  <button class="btn btn-clear" onclick="clearForm()">Limpiar</button>
 </div>
-
-<!-- ===============================
-     BUSCADOR
-=============================== -->
 
 <div class="search-box">
-
-<span class="icon">🔍</span>
-
-<input
-id="search"
-placeholder="Buscar..."
-onkeyup="filterVaults()"
-
->
-
+  <span class="icon">🔍</span>
+  <input id="search" placeholder="Buscar..." onkeyup="filterVaults()">
 </div>
 
-<!-- ===============================
-     TABLA DE VAULTS
-=============================== -->
-
-<table>
-
-<thead>
-<tr>
-<th>ID</th>
-<th>Nombre</th>
-<th>Descripción</th>
-<th>Fecha</th>
-</tr>
-</thead>
-
-<tbody id="table"></tbody>
-
-</table>
-
-<!-- ===============================
-     SCRIPTS
-=============================== -->
+<!-- CONTENEDOR NUEVO -->
+<div id="vaultContainer" class="vault-grid"></div>
 
 <script src="vaults.js"></script>
 
 <script>
-
-/* ===============================
-   VOLVER AL DASHBOARD
-=============================== */
-function goBack(){
-  window.location.href = "dashboard.html";
-}
-
-/* ===============================
-   CERRAR SESIÓN
-=============================== */
-function logout(){
-  localStorage.clear();
-  window.location.href = "login.html";
-}
-
+function goBack(){ window.location.href="dashboard.html"; }
+function logout(){ localStorage.clear(); window.location.href="login.html"; }
 </script>
 
 </body>
