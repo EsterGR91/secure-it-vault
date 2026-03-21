@@ -2,7 +2,14 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // Expone funciones seguras al frontend
 contextBridge.exposeInMainWorld('api', {
+// ===============================
+// VAULTS
+// ===============================
+getVaults: () =>
+  ipcRenderer.invoke('vaults:get'),
 
+createVault: (data) =>
+  ipcRenderer.invoke('vaults:create', data),
   /**
    * =====================================================
    * LOGIN

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Vaults</title>
+
+<style>
+
+/* ===============================
+   ESTILO GENERAL
+=============================== */
+body{
+  margin:0;
+  font-family:'Segoe UI';
+  background:#0f172a;
+  color:white;
+  padding:30px;
+}
+
+/* ===============================
+   HEADER CENTRADO (LOGO + TÍTULO)
+=============================== */
+.header-center{
+  text-align:center;
+}
+
+.header-center img{
+  width:140px;
+  margin-bottom:15px;
+}
+
+h2{
+  margin-bottom:20px;
+}
+
+/* ===============================
+   BOTONES SUPERIORES (VOLVER / SALIR)
+=============================== */
+.top-actions{
+  position:absolute;
+  top:20px;
+  right:20px;
+}
+
+/* estilo base de botones */
+.btn{
+  padding:10px 16px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  transition:0.2s;
+}
+
+.btn:hover{
+  transform:scale(1.05);
+}
+
+/* colores */
+.btn-back{background:#64748b;color:white;}
+.btn-logout{background:#ef4444;color:white;}
+.btn-create{background:#22c55e;color:white;}
+.btn-clear{background:#475569;color:white;}
+
+/* ===============================
+   FORMULARIO CREAR VAULT
+=============================== */
+.form{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+input{
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  background:#1e293b;
+  color:white;
+}
+
+/* ===============================
+   BUSCADOR
+=============================== */
+.search-box{
+  position:relative;
+  width:250px;
+  margin:20px auto;
+}
+
+.search-box input{
+  width:100%;
+  padding:12px 12px 12px 40px;
+  border-radius:10px;
+  border:none;
+  background:#1e293b;
+  color:white;
+}
+
+.search-box .icon{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#94a3b8;
+}
+
+/* ===============================
+   TABLA
+=============================== */
+table{
+  width:100%;
+  margin-top:20px;
+}
+
+td,th{
+  padding:12px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- ===============================
+     BOTONES SUPERIORES
+=============================== -->
+
+<div class="top-actions">
+
+  <!-- botón para volver al dashboard -->
+
+  <button class="btn btn-back" onclick="goBack()">
+    Volver
+  </button>
+
+  <!-- botón para cerrar sesión -->
+
+  <button class="btn btn-logout" onclick="logout()">
+    Salir
+  </button>
+
+</div>
+
+<!-- ===============================
+     HEADER (LOGO + TÍTULO)
+=============================== -->
+
+<div class="header-center">
+
+  <!-- logo del sistema -->
+
+  <img src="./assets/logo.jpeg">
+
+  <h2>Vaults</h2>
+
+</div>
+
+<!-- ===============================
+     FORMULARIO CREAR VAULT
+=============================== -->
+
+<div class="form">
+
+  <!-- nombre del vault -->
+
+  <input id="name" placeholder="Nombre del Vault">
+
+  <!-- descripción -->
+
+  <input id="description" placeholder="Descripción">
+
+  <!-- botón crear -->
+
+  <button class="btn btn-create" onclick="createVault()">
+    Crear
+  </button>
+
+  <!-- botón limpiar -->
+
+  <button class="btn btn-clear" onclick="clearForm()">
+    Limpiar
+  </button>
+
+</div>
+
+<!-- ===============================
+     BUSCADOR
+=============================== -->
+
+<div class="search-box">
+
+<span class="icon">🔍</span>
+
+<input
+id="search"
+placeholder="Buscar..."
+onkeyup="filterVaults()"
+
+>
+
+</div>
+
+<!-- ===============================
+     TABLA DE VAULTS
+=============================== -->
+
+<table>
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Descripción</th>
+<th>Fecha</th>
+</tr>
+</thead>
+
+<tbody id="table"></tbody>
+
+</table>
+
+<!-- ===============================
+     SCRIPTS
+=============================== -->
+
+<script src="vaults.js"></script>
+
+<script>
+
+/* ===============================
+   VOLVER AL DASHBOARD
+=============================== */
+function goBack(){
+  window.location.href = "dashboard.html";
+}
+
+/* ===============================
+   CERRAR SESIÓN
+=============================== */
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+</script>
+
+</body>
+</html>

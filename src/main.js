@@ -17,6 +17,7 @@ const verificationRepository = require('./db/verification.repository');
 // ===============================
 const { login } = require('./services/auth.service');
 const userService = require('./services/user.service');
+const vaultService = require('./services/vault.service');
 
 
 // ===============================
@@ -216,6 +217,29 @@ ipcMain.handle('updateUserPassword', async (e, id, pass) => {
   return true;
 });
 
+// ===============================
+// VAULTS - LISTAR
+// ===============================
+ipcMain.handle('vaults:get', async () => {
+
+  if (!currentUserId) return [];
+
+  return await vaultService.getVaults(currentUserId);
+});
+
+
+// ===============================
+// VAULTS - CREAR
+// ===============================
+ipcMain.handle('vaults:create', async (e, data) => {
+
+  if (!currentUserId) {
+    console.warn("No hay usuario en sesión");
+    return null;
+  }
+
+  return await vaultService.createVault(data, currentUserId);
+});
 
 // ===============================
 // INICIALIZACIÓN DE LA APP
