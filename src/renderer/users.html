@@ -114,12 +114,20 @@ td,th{padding:12px;}
   background:#facc15;
   padding:6px 12px;
   border-radius:8px;
+  box-shadow:0 0 8px rgba(250,204,21,0.5);
+  font-weight:700; 
+  transition:0.2s;
+
 }
 
 .btn-delete{
   background:#ef4444;
   padding:6px 12px;
   border-radius:8px;
+   box-shadow:0 0 8px rgba(239,68,68,0.5);
+   font-weight:700; 
+    transition:0.2s;
+
 }
 
 /* MODAL */
@@ -254,6 +262,7 @@ td,th{padding:12px;}
 
     <div class="modal-actions">
       <button class="btn save-btn" onclick="saveEdit()">Guardar</button>
+      <button class="btn btn-clear" onclick="clearEdit()">Limpiar</button>
       <button class="btn cancel-btn" onclick="cancelEdit()">Cancelar</button>
     </div>
 
