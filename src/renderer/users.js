@@ -14,21 +14,23 @@ async function loadUsers(){
 
   try {
 
-    const showInactive = document.getElementById("showInactive")?.checked;
+    // 1. Obtener checkbox correctamente
+    const checkbox = document.getElementById("showInactive");
+    const showInactive = checkbox ? checkbox.checked : false;
 
-    let users = await window.api.getUsersFull();
+    console.log("🔹 showInactive:", showInactive);
 
-    // filtrar activos si no está marcado
-    if(!showInactive){
-      users = users.filter(u => u.is_active === 1);
-    }
+    // 2. Llamar backend
+    let users = await window.api.getUsersFull(showInactive);
 
+    console.log("🔹 usuarios recibidos:", users);
+
+    // 3. Guardar y renderizar
     allUsers = users;
-
     renderUsers(users);
 
   } catch (error){
-    console.error("Error loading users:", error);
+    console.error(" Error loading users:", error);
   }
 }
 
@@ -69,7 +71,7 @@ function renderUsers(users){
     // ESTILO VISUAL INACTIVOS
     // ===============================
     if(u.is_active === 0){
-      row.style.opacity = "0.5";
+     row.style.filter = "grayscale(60%)";
     }
 
     // ===============================
@@ -94,8 +96,13 @@ function renderUsers(users){
     const btnEdit = document.createElement("button");
     btnEdit.className = "btn-edit";
     btnEdit.textContent = "Editar";
-    btnEdit.onclick = () => openEdit(u.id);
-
+    if(u.is_active === 1){
+       btnEdit.onclick = () => openEdit(u.id);
+    }else{
+  btnEdit.disabled = true;
+  btnEdit.style.opacity = "0.4";
+  btnEdit.style.cursor = "not-allowed";
+    }
     // ===============================
     // BOTÓN DINÁMICO ACTIVO / INACTIVO
     // ===============================
@@ -114,6 +121,9 @@ function renderUsers(users){
       btnToggle.onclick = () => confirmAction(u, true);
     }
 
+
+   
+
     // agregar botones
     actions.appendChild(btnEdit);
     actions.appendChild(btnToggle);
@@ -129,7 +139,16 @@ function renderUsers(users){
 /* ===============================
    ACTIVAR / DESACTIVAR
 =============================== */
+
+
 async function confirmAction(user, activate){
+
+
+  //  PROTEGER ADMIN
+if(user.username === "adminew" && !activate){
+  alert("No puedes desactivar el usuario administrador");
+  return;
+}
 
   const action = activate ? "activar" : "desactivar";
 

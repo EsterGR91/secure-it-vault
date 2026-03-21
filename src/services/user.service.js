@@ -107,7 +107,36 @@ async function deleteUser(id, currentUserId){
   return result;
 }
 
+// Función para activar o desactivar un usuario
+async function toggleUser(id, state){
 
+  /*
+    state:
+      true  → usuario activo
+      false → usuario inactivo
+  */
+
+  // PROTECCIÓN DEL ADMIN PRINCIPAL
+  // Si el usuario es el ID 1 (admin principal) y se intenta desactivar,
+  // lanzo un error para evitar que el sistema quede sin administrador.
+  if(id === 1 && !state){
+    throw new Error("No se puede desactivar el usuario administrador");
+  }
+
+  // Llamo al repositorio para actualizar el estado en base de datos
+  const result = await userRepo.toggleUser(id, state);
+
+  // Registro la acción en la tabla de auditoría
+  // Dependiendo del estado, guardo si fue activación o desactivación
+  await auditRepo.logAction(
+    null, // luego se puede reemplazar por el usuario logueado
+    state ? "ACTIVATE_USER" : "DEACTIVATE_USER",
+    `User ID ${id}`
+  );
+
+  // Devuelvo el resultado de la operación
+  return result;
+}
 // ===============================
 // ACTUALIZAR PASSWORD
 // ===============================
