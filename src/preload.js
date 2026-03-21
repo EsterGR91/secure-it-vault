@@ -101,6 +101,25 @@ contextBridge.exposeInMainWorld('api', {
   resetPassword: (password) =>
     ipcRenderer.invoke('reset-password', password),
 
+  
+// ===============================
+// CREDENTIALS
+// ===============================
+
+getCredentials: (vaultId) =>
+  ipcRenderer.invoke('credentials:get', vaultId),
+
+getCredential: (id) =>
+  ipcRenderer.invoke('credentials:getOne', id),
+
+createCredential: (data) =>
+  ipcRenderer.invoke('credentials:create', data),
+
+updateCredential: (id, data) =>
+  ipcRenderer.invoke('credentials:update', id, data),
+
+deleteCredential: (id) =>
+  ipcRenderer.invoke('credentials:delete', id),
 
   /**
    * =====================================================

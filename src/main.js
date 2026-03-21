@@ -18,6 +18,7 @@ const verificationRepository = require('./db/verification.repository');
 const { login } = require('./services/auth.service');
 const userService = require('./services/user.service');
 const vaultService = require('./services/vault.service');
+const credentialsService = require('./services/credentials.service');
 
 
 // ===============================
@@ -226,6 +227,35 @@ ipcMain.handle('vaults:delete', async (event, id) => {
   if (!currentUserId) throw new Error("No session");
 
   return await vaultService.deleteVault(id, currentUserId);
+});
+
+// ===============================
+// CREDENTIALS
+// ===============================
+
+// LISTAR CREDENTIALS
+ipcMain.handle('credentials:get', async (e, vaultId) => {
+  return await credentialsService.getCredentials(vaultId);
+});
+
+// DETALLE CREDENTIALS
+ipcMain.handle('credentials:getOne', async (e, id) => {
+  return await credentialsService.getCredential(id);
+});
+
+// CREAR CREDENTIALS
+ipcMain.handle('credentials:create', async (e, data) => {
+  return await credentialsService.createCredential(data, currentUserId);
+});
+
+// UPDATE CREDENTIALS
+ipcMain.handle('credentials:update', async (e, id, data) => {
+  return await credentialsService.updateCredential(id, data, currentUserId);
+});
+
+// DELETE CREDENTIALS
+ipcMain.handle('credentials:delete', async (e, id) => {
+  return await credentialsService.deleteCredential(id, currentUserId);
 });
 
 
