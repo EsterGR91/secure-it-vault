@@ -169,22 +169,28 @@ input{
 =============================== */
 
 .vault-note{
-  width:100%;                 /* Ocupa todo el ancho disponible */
-  min-height:80px;            /* Altura mínima para que siempre sea visible */
-  margin-top:10px;            /* Separación superior respecto a otros elementos */
-  background:#0f172a;         /* Fondo oscuro acorde al tema del sistema */
-  border:none;                /* Sin borde por defecto */
-  color:white;                /* Texto en blanco */
-  resize:vertical;            /* Permite redimensionar solo verticalmente */
-  padding:10px;               /* Espaciado interno más cómodo para escribir */
-  border-radius:8px;          /* Bordes redondeados */
-  transition:0.2s;            /* Transición suave para efectos visuales */
+  width:100%;
+  min-height:80px;
+  resize:vertical;
+  background:#0f172a;
+  border:none;
+  color:white;
+  padding:10px;
+  border-radius:8px;
+  outline:none;
+
+  /* mejora rendimiento */
+  will-change: contents;
 }
 
-/* Estilo cuando el usuario hace foco en la nota */
-.vault-note:focus{
-  outline:2px solid #22c55e;   /* Resalta con borde verde cuando está activa */
-  background:#020617;         /* Fondo un poco más oscuro al escribir */
+.vault-input-title{
+  width:100%;
+  background:#0f172a;
+  border:none;
+  color:white;
+  font-weight:bold;
+  padding:5px;
+  outline:none;
 }
 
 
