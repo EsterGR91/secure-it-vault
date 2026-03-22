@@ -5,7 +5,6 @@ let credentials = [];
 let currentVault = 1;
 let editingId = null;
 
-
 // ===============================
 // NAVEGACIÓN
 // ===============================
@@ -17,7 +16,6 @@ function exitApp(){
   window.close();
 }
 
-
 // ===============================
 // MOSTRAR / OCULTAR PASSWORD
 // ===============================
@@ -26,9 +24,8 @@ function togglePassword(){
   input.type = input.type === "password" ? "text" : "password";
 }
 
-
 // ===============================
-// CARGAR DATOS COMPLETOS (SIN LAG)
+// CARGAR DATOS (OPTIMIZADO)
 // ===============================
 async function loadCredentials(){
 
@@ -39,43 +36,43 @@ async function loadCredentials(){
 
     render(credentials);
 
-    const fullData = await Promise.all(
-      credentials.map(c => window.api.getCredential(c.id))
-    );
+    // segunda carga completa sin bloquear UI
+    setTimeout(async () => {
 
-    credentials = credentials.map((c, i) => ({
-      ...c,
-      username: fullData[i]?.username || "Usuario no definido",
-      password: fullData[i]?.password || null,
-      url: fullData[i]?.url || ""
-    }));
+      const fullData = await Promise.all(
+        credentials.map(c => window.api.getCredential(c.id))
+      );
 
-    render(credentials);
+      credentials = credentials.map((c, i) => ({
+        ...c,
+        username: fullData[i]?.username || "Usuario no definido",
+        password: fullData[i]?.password || null,
+        url: fullData[i]?.url || ""
+      }));
+
+      render(credentials);
+
+    }, 0);
 
   }catch(error){
     console.error("Error cargando credenciales:", error);
   }
 }
 
-
 // ===============================
-// RENDER OPTIMIZADO (NO TOCAR)
+// RENDER ULTRA OPTIMIZADO
 // ===============================
 function render(list){
 
   const container = document.getElementById("list");
-
-  // optimización: evitar render innecesario si está vacío
   if(!container) return;
-
-  container.innerHTML = "";
 
   const fragment = document.createDocumentFragment();
 
   list.forEach(c => {
 
     const div = document.createElement("div");
-    div.className = "card";
+    div.className = "card fade-in";
 
     const username = c.username || "Usuario no definido";
     const title = c.title || "Sin sistema";
@@ -97,9 +94,9 @@ function render(list){
     fragment.appendChild(div);
   });
 
+  container.innerHTML = "";
   container.appendChild(fragment);
 }
-
 
 // ===============================
 // FORMATO FECHA
@@ -109,9 +106,8 @@ function formatDate(date){
   return new Date(date).toLocaleString("es-CR");
 }
 
-
 // ===============================
-// INICIAR EDICIÓN
+// EDITAR
 // ===============================
 async function startEdit(id){
 
@@ -129,11 +125,8 @@ async function startEdit(id){
   document.getElementById("password").value = data.password || "";
   document.getElementById("url").value = data.url || "";
 
-  document.getElementById("title").focus();
-
   showToast("Modo edición activado");
 }
-
 
 // ===============================
 // CREAR / ACTUALIZAR
@@ -160,13 +153,10 @@ async function createCredential(){
   };
 
   if(editingId){
-
     await window.api.updateCredential(editingId, data);
     showToast("Credencial actualizada");
     editingId = null;
-
   }else{
-
     await window.api.createCredential(data);
     showToast("Credencial creada");
   }
@@ -174,7 +164,6 @@ async function createCredential(){
   await loadCredentials();
   clearForm();
 }
-
 
 // ===============================
 // LIMPIAR FORM
@@ -187,10 +176,7 @@ function clearForm(){
   document.getElementById("url").value = "";
 
   editingId = null;
-
-  document.getElementById("title").focus();
 }
-
 
 // ===============================
 // ELIMINAR
@@ -200,13 +186,11 @@ async function deleteCredential(id){
   if(!confirm("Eliminar credencial?")) return;
 
   await window.api.deleteCredential(id);
-
   loadCredentials();
 }
 
-
 // ===============================
-// MODAL
+// VER MODAL
 // ===============================
 function view(id){
 
@@ -218,69 +202,38 @@ function view(id){
   }
 
   const overlay = document.createElement("div");
-
-  overlay.style.position = "fixed";
-  overlay.style.top = 0;
-  overlay.style.left = 0;
-  overlay.style.width = "100%";
-  overlay.style.height = "100%";
-  overlay.style.background = "rgba(0,0,0,0.7)";
-  overlay.style.display = "flex";
-  overlay.style.justifyContent = "center";
-  overlay.style.alignItems = "center";
+  overlay.className = "modal-overlay";
 
   const modal = document.createElement("div");
-
-  modal.style.background = "#1e293b";
-  modal.style.padding = "25px";
-  modal.style.borderRadius = "12px";
-  modal.style.width = "350px";
+  modal.className = "modal-box";
 
   modal.innerHTML = `
     <h3>${data.title}</h3>
     <p><b>Usuario:</b> ${data.username}</p>
     <p><b>Password:</b> ${data.password}</p>
     <p><b>URL:</b> ${data.url}</p>
-    <br>
-    <button onclick="this.parentElement.parentElement.remove()">Cerrar</button>
+    <button onclick="this.closest('.modal-overlay').remove()">Cerrar</button>
   `;
 
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 }
 
-
 // ===============================
-// COPIAR PASSWORD
+// COPIAR PASSWORD (REAL)
 // ===============================
 async function copyPassword(id){
 
-  try{
+  const cred = credentials.find(c => c.id === id);
 
-    const cred = credentials.find(c => c.id === id);
-
-    if(!cred){
-      showToast("No se encontró la credencial");
-      return;
-    }
-
-    if(!cred.password){
-      showToast("No hay contraseña disponible");
-      return;
-    }
-
-    await window.api.copyToClipboard(cred.password);
-
-    showToast("Contraseña copiada correctamente");
-
-  }catch(error){
-
-    console.error("Error copiando:", error);
-    showToast("Error al copiar");
-
+  if(!cred || !cred.password){
+    showToast("No hay contraseña disponible");
+    return;
   }
-}
 
+  await window.api.copyToClipboard(cred.password);
+  showToast("Contraseña copiada");
+}
 
 // ===============================
 // TOAST
@@ -288,25 +241,16 @@ async function copyPassword(id){
 function showToast(msg){
 
   const toast = document.createElement("div");
-
+  toast.className = "toast";
   toast.innerText = msg;
-  toast.style.position = "fixed";
-  toast.style.bottom = "20px";
-  toast.style.right = "20px";
-  toast.style.background = "#22c55e";
-  toast.style.padding = "12px 20px";
-  toast.style.borderRadius = "10px";
-  toast.style.fontWeight = "bold";
-  toast.style.boxShadow = "0 0 10px rgba(0,0,0,0.4)";
 
   document.body.appendChild(toast);
 
   setTimeout(() => toast.remove(), 2000);
 }
 
-
 // ===============================
-// GENERADOR
+// GENERADOR NORMAL (TUYO)
 // ===============================
 function generatePassword(){
 
@@ -323,34 +267,75 @@ function generatePassword(){
   document.getElementById("password").value = pass;
 }
 
-
 // ===============================
-// BUSCADOR SIN LAG REAL
+// GENERADOR VISUAL PRO (NUEVO)
 // ===============================
-function filterCredentials(){
+function updateLength(){
+  const val = document.getElementById("length").value;
+  document.getElementById("lengthLabel").innerText = val;
+}
 
-  const text = document.getElementById("search").value.toLowerCase();
+function generatePasswordAdvanced(){
 
-  // si no hay texto → render normal
-  if(!text){
-    render(credentials);
+  const length = document.getElementById("length").value;
+
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+
+  let pass = "";
+
+  for(let i=0;i<length;i++){
+    pass += chars.charAt(Math.floor(Math.random()*chars.length));
+  }
+
+  document.getElementById("generatedPass").innerText = pass;
+
+  // sincroniza con input
+  document.getElementById("password").value = pass;
+}
+
+async function copyGenerated(){
+
+  const pass = document.getElementById("generatedPass").innerText;
+
+  if(!pass || pass === "contraseña aquí"){
+    showToast("Primero genera una contraseña");
     return;
   }
 
-  // filtro directo sin delay
-  const filtered = credentials.filter(c => {
-
-    const user = (c.username || "").toLowerCase();
-    const title = (c.title || "").toLowerCase();
-
-    return user.includes(text) || title.includes(text);
-  });
-
-  render(filtered);
+  await window.api.copyToClipboard(pass);
+  showToast("Contraseña copiada");
 }
 
-
 // ===============================
-// INIT
+// BUSCADOR SIN LAG
+// ===============================
+let searchTimeout;
+
+function filterCredentials(){
+
+  clearTimeout(searchTimeout);
+
+  searchTimeout = setTimeout(() => {
+
+    const text = document.getElementById("search").value.toLowerCase();
+
+    if(!text){
+      render(credentials);
+      return;
+    }
+
+    const filtered = credentials.filter(c => {
+
+      const user = (c.username || "").toLowerCase();
+      const title = (c.title || "").toLowerCase();
+
+      return user.includes(text) || title.includes(text);
+    });
+
+    render(filtered);
+
+  }, 120);
+}
+
 // ===============================
 window.onload = loadCredentials;
