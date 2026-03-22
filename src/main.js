@@ -1,7 +1,7 @@
 // ===============================
 // IMPORTACIONES PRINCIPALES
 // ===============================
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard } = require('electron');
 const path = require('path');
 
 
@@ -10,6 +10,7 @@ const path = require('path');
 // ===============================
 const credentialsRepository = require('./db/credentials.repository');
 const verificationRepository = require('./db/verification.repository');
+const auditRepo = require('./db/audit.repository');
 
 
 // ===============================
@@ -185,16 +186,8 @@ ipcMain.handle('updateUserPassword', async (e, id, pass) => {
 
 
 // ===============================
-// VAULTS (ARREGLADO COMPLETO)
+// VAULTS
 // ===============================
-
-/*
-  IMPORTANTE:
-  - SOLO existe UN handler por acción
-  - usamos currentUserId (no global)
-*/
-
-// LISTAR
 ipcMain.handle('vaults:get', async () => {
 
   if (!currentUserId) return [];
@@ -202,8 +195,6 @@ ipcMain.handle('vaults:get', async () => {
   return await vaultService.getVaults(currentUserId);
 });
 
-
-// CREAR
 ipcMain.handle('vaults:create', async (event, data) => {
 
   if (!currentUserId) throw new Error("No session");
@@ -211,8 +202,6 @@ ipcMain.handle('vaults:create', async (event, data) => {
   return await vaultService.createVault(data, currentUserId);
 });
 
-
-// ACTUALIZAR
 ipcMain.handle('vaults:update', async (event, id, data) => {
 
   if (!currentUserId) throw new Error("No session");
@@ -220,8 +209,6 @@ ipcMain.handle('vaults:update', async (event, id, data) => {
   return await vaultService.updateVault(id, data, currentUserId);
 });
 
-
-// ELIMINAR
 ipcMain.handle('vaults:delete', async (event, id) => {
 
   if (!currentUserId) throw new Error("No session");
@@ -229,45 +216,64 @@ ipcMain.handle('vaults:delete', async (event, id) => {
   return await vaultService.deleteVault(id, currentUserId);
 });
 
+
 // ===============================
 // CREDENTIALS
 // ===============================
-
-// LISTAR CREDENTIALS
 ipcMain.handle('credentials:get', async (e, vaultId) => {
   return await credentialsService.getCredentials(vaultId);
 });
 
-// DETALLE CREDENTIALS
 ipcMain.handle('credentials:getOne', async (e, id) => {
   return await credentialsService.getCredential(id);
 });
 
-// CREAR CREDENTIALS
 ipcMain.handle('credentials:create', async (e, data) => {
   return await credentialsService.createCredential(data, currentUserId);
 });
 
-// UPDATE CREDENTIALS
 ipcMain.handle('credentials:update', async (e, id, data) => {
   return await credentialsService.updateCredential(id, data, currentUserId);
 });
 
-// DELETE CREDENTIALS
 ipcMain.handle('credentials:delete', async (e, id) => {
   return await credentialsService.deleteCredential(id, currentUserId);
 });
 
 
-// COPY CLIPBOARD CREDENTIALS
-const { clipboard } = require('electron');
-
+// ===============================
+// COPY CLIPBOARD
+// ===============================
 ipcMain.handle("copy-to-clipboard", (_, text) => {
 
   clipboard.writeText(text);
 
   return true;
-});3
+});
+
+
+// ===============================
+// AUDITORÍA (MEJORA SEGURA)
+// ===============================
+ipcMain.handle('audit:get', async () => {
+
+  try {
+
+    const logs = await auditRepo.getAuditLogs();
+
+    console.log("Logs enviados al frontend:", logs); // debug controlado
+
+    return logs || [];
+
+  } catch (error) {
+
+    console.error("Error en audit:get:", error);
+
+    return []; 
+
+  }
+});
+
 
 // ===============================
 // INICIO APP

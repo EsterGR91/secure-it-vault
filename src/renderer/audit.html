@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<!-- Permite el uso de caracteres especiales -->
+
+<title>Audit Logs</title>
+<!-- Módulo para visualizar los registros de auditoría -->
+
+<style>
+
+/* =========================
+   ESTILO GENERAL
+========================= */
+
+body{
+  margin:0;
+  font-family:'Segoe UI';        /* Fuente principal del sistema */
+  background:#0f172a;            /* Fondo oscuro corporativo */
+  color:white;
+  padding:30px;
+}
+
+/* =========================
+   HEADER CENTRADO
+========================= */
+
+.header-center{
+  text-align:center;             /* Centra logo y título */
+}
+
+.header-center img{
+  width:140px;                   /* Tamaño del logo */
+  margin-bottom:15px;
+}
+
+/* =========================
+   BOTONES SUPERIORES
+========================= */
+
+.top-actions{
+  position:absolute;             /* Posiciona botones en la esquina superior */
+  top:20px;
+  right:20px;
+  display:flex;
+  gap:10px;
+}
+
+.btn{
+  padding:10px 15px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.btn-back{background:#64748b;color:white;}   /* Botón volver */
+.btn-exit{background:#ef4444;color:white;}   /* Botón salir */
+.btn-clear{background:#475569;color:white;}  /* Botón limpiar búsqueda */
+
+/* =========================
+   BUSCADOR
+========================= */
+
+.search-box{
+  margin:20px auto;
+  width:300px;
+}
+
+.search-box input{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  background:#1e293b;
+  color:white;
+}
+
+/* =========================
+   TABLA DE LOGS
+========================= */
+
+table{
+  width:100%;
+  margin-top:20px;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:10px;
+  text-align:left;
+}
+
+tr{
+  background:#1e293b;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+tr:hover{
+  background:#334155;            /* Resaltado al pasar el mouse */
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- =========================
+     BOTONES SUPERIORES
+========================= -->
+
+<div class="top-actions">
+  <button class="btn btn-back" onclick="goBack()">Volver</button>
+  <button class="btn btn-clear" onclick="clearSearch()">Limpiar</button>
+  <button class="btn btn-exit" onclick="exitApp()">Salir</button>
+</div>
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<div class="header-center">
+  <img src="./assets/logo.jpeg">
+  <h2>Audit Logs</h2>
+</div>
+
+<!-- =========================
+     BUSCADOR
+========================= -->
+
+<div class="search-box">
+  <!-- Filtro dinámico -->
+  <input id="search" placeholder="Buscar..." onkeyup="filterLogs()">
+</div>
+
+<!-- =========================
+     TABLA DE AUDITORÍA
+========================= -->
+
+<table>
+<thead>
+<tr>
+<th>User</th>
+<th>Action</th>
+<th>Target</th>
+<th>IP</th>
+<th>Fecha</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+<!-- Aquí se renderizan dinámicamente los logs desde audit.js -->
+</table>
+
+<script src="audit.js"></script>
+
+</body>
+</html>
