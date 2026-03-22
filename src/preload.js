@@ -44,6 +44,8 @@ contextBridge.exposeInMainWorld('api', {
   updateUserPassword: (id, pass) =>
     ipcRenderer.invoke('updateUserPassword', id, pass),
 
+  
+
 
   /**
    * =====================================================

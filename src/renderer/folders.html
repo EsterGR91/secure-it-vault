@@ -6,7 +6,10 @@
 
 <style>
 
-/* GENERAL */
+/* =========================================================
+   GENERAL
+========================================================= */
+
 body{
   margin:0;
   font-family:'Segoe UI';
@@ -15,30 +18,23 @@ body{
   padding:20px;
 }
 
-/* LOGO COMO DASHBOARD */
+/* =========================================================
+   LOGO (IGUAL DASHBOARD)
+========================================================= */
+
 .logo{
-  position:absolute;
-  top:15px;
-  left:20px;
-  display:flex;
-  align-items:center;
-  gap:10px;
+  text-align:center;
+  margin-bottom:10px;
 }
 
-.logo-box{
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  background:linear-gradient(135deg,#22c55e,#3b82f6);
+.logo img{
+  width:160px;
 }
 
-.logo-text{
-  font-weight:600;
-  font-size:14px;
-  opacity:0.9;
-}
+/* =========================================================
+   BOTONES SUPERIORES
+========================================================= */
 
-/* BOTONES */
 .top-actions{
   position:absolute;
   top:15px;
@@ -52,19 +48,31 @@ body{
   border:none;
   border-radius:8px;
   cursor:pointer;
+  font-weight:500;
+  transition:0.2s;
 }
 
 .btn-back{background:#64748b;}
 .btn-exit{background:#ef4444;}
 .btn-clear{background:#475569;}
 
-/* HEADER */
-.header{
-  text-align:center;
-  margin-top:20px;
+.btn:hover{
+  transform:translateY(-1px);
+  opacity:0.9;
 }
 
-/* CONTROLES */
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header{
+  text-align:center;
+}
+
+/* =========================================================
+   CONTROLES
+========================================================= */
+
 .controls{
   display:flex;
   justify-content:center;
@@ -80,7 +88,10 @@ select,input{
   color:white;
 }
 
-/* TREE */
+/* =========================================================
+   TREE
+========================================================= */
+
 .tree{margin-top:20px;}
 
 .node{
@@ -90,6 +101,7 @@ select,input{
   padding:6px 10px;
   border-radius:6px;
   cursor:pointer;
+  transition:0.2s;
 }
 
 .node:hover{background:#1e293b;}
@@ -99,7 +111,9 @@ select,input{
   transition:0.2s;
 }
 
-.arrow.open{transform:rotate(90deg);}
+.arrow.open{
+  transform:rotate(90deg);
+}
 
 .children{
   margin-left:20px;
@@ -112,15 +126,118 @@ select,input{
   max-height:500px;
 }
 
+/* =========================================================
+   ICONOS PRO (SIN EMOJIS)
+========================================================= */
+
+.icon{
+  width:12px;
+  height:12px;
+  border-radius:2px;
+}
+
+.icon-vault{
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+}
+
+.icon-folder{
+  background:#facc15;
+}
+
+/* =========================================================
+   MENÚ ⋮
+========================================================= */
+
 .menu{
   margin-left:auto;
   cursor:pointer;
+  padding:4px 6px;
+  border-radius:6px;
+  transition:0.2s;
+  opacity:0.6;
 }
+
+.menu:hover{
+  background:#334155;
+  opacity:1;
+}
+
+/* =========================================================
+   EDITOR INLINE
+========================================================= */
 
 .editor{
   margin-left:40px;
   margin-top:5px;
+  display:flex;
+  gap:5px;
 }
+
+/* Inputs */
+.editor input{
+  background:#020617;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:6px;
+  padding:6px;
+  color:white;
+  font-size:12px;
+}
+
+/* Botones pro */
+.btn-mini{
+  padding:5px 10px;
+  border:none;
+  border-radius:6px;
+  font-size:11px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+/* Guardar */
+.btn-save{
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+}
+
+/* Eliminar */
+.btn-delete{
+  background:linear-gradient(135deg,#ef4444,#dc2626);
+}
+
+.btn-mini:hover{
+  transform:scale(1.05);
+}
+
+/* =========================
+   EDITOR DE NOTAS EXPANDIBLE
+========================= */
+
+.notes-area{
+  width:100%;
+  min-height:60px;
+  max-height:300px;
+  resize:vertical;
+
+  background:#0f172a;
+  color:white;
+
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;
+
+  padding:8px;
+  margin-top:5px;
+
+  font-family:'Segoe UI';
+  font-size:13px;
+
+  outline:none;
+}
+
+/* efecto focus bonito */
+.notes-area:focus{
+  border:1px solid #22c55e;
+  box-shadow:0 0 5px rgba(34,197,94,0.4);
+}
+
 
 </style>
 </head>
@@ -128,8 +245,8 @@ select,input{
 <body>
 
 <!-- LOGO -->
-<div style="text-align:center;margin-bottom:10px;">
-   <img src="./assets/logo.jpeg" style="width:160px;">
+<div class="logo">
+  <img src="./assets/logo.jpeg">
 </div>
 
 <!-- BOTONES -->

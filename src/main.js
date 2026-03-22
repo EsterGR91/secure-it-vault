@@ -347,6 +347,10 @@ ipcMain.handle('folders:delete', async (e, id) => {
     console.error("Error folders:delete:", error);
     throw error;
   }
+
+   
+
+
 });
 
 

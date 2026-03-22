@@ -1,34 +1,36 @@
-// =====================================================
-// VARIABLES GLOBALES
-// =====================================================
-
+// ===============================
+// VARIABLES (SIN CAMBIOS)
+// ===============================
 let vaults = [];
 let folders = [];
 let filtered = [];
 let searchTimeout;
 
-// Subcarpetas en memoria (no afecta BD)
 let subfolders = {};
-let expanded = {};  // controla qué vault está abiertov
+let expanded = {};
 
 
-// =====================================================
-// NAVEGACIÓN
-// =====================================================
-
-function goBack(){
-  window.location.href = "dashboard.html";
+// ===============================
+//  GUARDADO LOCAL
+// ===============================
+function saveLocal(){
+  localStorage.setItem("subfolders", JSON.stringify(subfolders));
 }
 
-function exitApp(){
-  window.close();
+function loadLocal(){
+  const data = localStorage.getItem("subfolders");
+  if(data){
+    subfolders = JSON.parse(data);
+  }
 }
 
 
-// =====================================================
-// CARGAR VAULTS
-// =====================================================
+// ===============================
+function goBack(){ window.location.href="dashboard.html"; }
+function exitApp(){ window.close(); }
 
+
+// ===============================
 async function loadVaults(){
 
   vaults = await window.api.getVaults();
@@ -44,22 +46,18 @@ async function loadVaults(){
 }
 
 
-// =====================================================
-// CARGAR FOLDERS (SIN TOCAR LÓGICA ORIGINAL)
-// =====================================================
-
+// ===============================
 async function loadFolders(){
 
   const vaultId = document.getElementById("vaultSelect").value;
 
   let data = await window.api.getFoldersByVault(vaultId);
 
-  // Fallback → mostrar vaults como raíz
   if(!data || data.length === 0){
     data = vaults.map(v=>({
-      id: v.id,
-      name: v.name,
-      isVault: true
+      id:v.id,
+      name:v.name,
+      isVault:true
     }));
   }
 
@@ -70,20 +68,13 @@ async function loadFolders(){
 }
 
 
-// =====================================================
-// RENDER TREE (ESTILO WINDOWS)
-// =====================================================
-
+// ===============================
 function render(){
 
   const tree = document.getElementById("tree");
   tree.innerHTML = "";
 
   filtered.forEach(vault=>{
-
-    // ============================
-    // NODO PRINCIPAL (VAULT)
-    // ============================
 
     const node = document.createElement("div");
     node.className = "node";
@@ -92,84 +83,60 @@ function render(){
     arrow.className = "arrow";
     arrow.innerText = "▶";
 
-    const label = document.createElement("span");
-    label.innerText = "🗄 " + vault.name;
+    const icon = document.createElement("span");
+    icon.className = "icon icon-vault";
+
+    const text = document.createElement("span");
+    text.innerText = vault.name;
 
     const menu = document.createElement("span");
     menu.className = "menu";
     menu.innerText = "⋮";
 
-    // Contenedor de hijos
     const children = document.createElement("div");
-children.className = "children";
+    children.className = "children";
 
-//  mantener abierto el vault correcto
-if(expanded[vault.id]){
-  children.classList.add("show");
-}
+    if(expanded[vault.id]){
+      children.classList.add("show");
+      arrow.classList.add("open");
+    }
 
-    // ============================
-    // EVENTOS
-    // ============================
-
-    // Expandir / colapsar
-   arrow.onclick = (e)=>{
-  e.stopPropagation();
-
-  const isOpen = children.classList.toggle("show");
-
-  // Guardar estado
-  expanded[vault.id] = isOpen;
-
-  arrow.innerText = isOpen ? "▼" : "▶";
-};
-
-    // DOBLE CLICK → CREAR SUBCARPETA
-    node.ondblclick = (e)=>{
+    arrow.onclick = (e)=>{
       e.stopPropagation();
+      const isOpen = children.classList.toggle("show");
+      expanded[vault.id] = isOpen;
+      arrow.classList.toggle("open");
+    };
+
+    node.ondblclick = ()=>{
       createSubfolder(vault.id);
     };
 
-    // MENÚ ⋮
     menu.onclick = (e)=>{
       e.stopPropagation();
       createSubfolder(vault.id);
     };
 
-    // ============================
-    // CONSTRUCCIÓN DEL NODO
-    // ============================
-
-    node.innerHTML = "";
-
-// Flecha
-   node.appendChild(arrow);
-
-// Texto
-const text = document.createElement("span");
-text.innerText = "🗄 " + vault.name;
-node.appendChild(text);
-
-// Menú ⋮
-   node.appendChild(menu);
+    node.appendChild(arrow);
+    node.appendChild(icon);
+    node.appendChild(text);
+    node.appendChild(menu);
 
     tree.appendChild(node);
     tree.appendChild(children);
-
-    // ============================
-    // SUBCARPETAS
-    // ============================
 
     const subs = subfolders[vault.id] || [];
 
     subs.forEach(sf=>{
 
-      // Nodo subcarpeta
       const sub = document.createElement("div");
-      sub.className = "node sub";
+      sub.className = "node";
+
+      const subIcon = document.createElement("span");
+      subIcon.className = "icon icon-folder";
 
       const subLabel = document.createElement("span");
-      subLabel.innerText = "📁 " + sf.name;
+      subLabel.innerText = sf.name;
 
       const subMenu = document.createElement("span");
       subMenu.className = "menu";
@@ -180,25 +147,30 @@ node.appendChild(text);
         toggleEdit(vault.id, sf.id);
       };
 
+      sub.appendChild(subIcon);
       sub.appendChild(subLabel);
       sub.appendChild(subMenu);
 
       children.appendChild(sub);
 
-      // ============================
-      // PANEL DE EDICIÓN INLINE
-      // ============================
-
       if(sf.editing){
 
         const editor = document.createElement("div");
-        editor.className = "node sub";
+        editor.className = "editor";
 
         editor.innerHTML = `
-          <input id="name_${sf.id}" value="${sf.name}" placeholder="Nombre">
-          <input id="notes_${sf.id}" value="${sf.notes || ""}" placeholder="Notas">
-          <button onclick="saveEdit(${vault.id},${sf.id})">Guardar</button>
-          <button onclick="deleteSub(${vault.id},${sf.id})">Eliminar</button>
+          <input id="name_${sf.id}" value="${sf.name}">
+          <textarea id="notes_${sf.id}" class="notes-area">${sf.notes || ""}</textarea>
+
+          <button class="btn-mini btn-save"
+            onclick="saveEdit(${vault.id},${sf.id})">
+            Guardar
+          </button>
+
+          <button class="btn-mini btn-delete"
+            onclick="deleteSub(${vault.id},${sf.id})">
+            Eliminar
+          </button>
         `;
 
         children.appendChild(editor);
@@ -210,74 +182,63 @@ node.appendChild(text);
 }
 
 
-// =====================================================
-// CREAR SUBCARPETA (CORRECTO)
-// =====================================================
-
+// ===============================
 function createSubfolder(vaultId){
 
   if(!subfolders[vaultId]) subfolders[vaultId] = [];
 
   subfolders[vaultId].push({
-    id: Date.now(),
-    name: "Nueva carpeta",
-    notes: "",
-    editing: true
+    id:Date.now(),
+    name:"Nueva carpeta",
+    notes:"",
+    editing:true
   });
 
-  //  ABRIR AUTOMÁTICAMENTE EL VAULT
   expanded[vaultId] = true;
+
+  saveLocal(); 
 
   render();
 }
 
-// =====================================================
-// TOGGLE EDICIÓN
-// =====================================================
 
+// ===============================
 function toggleEdit(vaultId, subId){
 
-  const sf = subfolders[vaultId].find(s=>s.id === subId);
-
+  const sf = subfolders[vaultId].find(s=>s.id===subId);
   sf.editing = !sf.editing;
 
   render();
 }
 
 
-// =====================================================
-// GUARDAR CAMBIOS
-// =====================================================
-
+// ===============================
 function saveEdit(vaultId, subId){
 
-  const sf = subfolders[vaultId].find(s=>s.id === subId);
+  const sf = subfolders[vaultId].find(s=>s.id===subId);
 
   sf.name = document.getElementById(`name_${subId}`).value;
   sf.notes = document.getElementById(`notes_${subId}`).value;
   sf.editing = false;
 
+  saveLocal(); 
   render();
 }
 
 
-// =====================================================
-// ELIMINAR SUBCARPETA
-// =====================================================
-
+// ===============================
 function deleteSub(vaultId, subId){
 
   subfolders[vaultId] =
-    subfolders[vaultId].filter(s=>s.id !== subId);
+    subfolders[vaultId].filter(s=>s.id!==subId);
+
+  saveLocal(); 
 
   render();
 }
 
 
-// =====================================================
-// BUSCADOR SIN LAG
-// =====================================================
-
+// ===============================
 function filterFolders(){
 
   clearTimeout(searchTimeout);
@@ -288,7 +249,7 @@ function filterFolders(){
 
     filtered = !text
       ? folders
-      : folders.filter(f => f.name.toLowerCase().includes(text));
+      : folders.filter(f=>f.name.toLowerCase().includes(text));
 
     render();
 
@@ -296,21 +257,16 @@ function filterFolders(){
 }
 
 
-// =====================================================
-// LIMPIAR BUSCADOR
-// =====================================================
-
+// ===============================
 function clearSearch(){
-
-  document.getElementById("search").value = "";
-  filtered = folders;
-
+  document.getElementById("search").value="";
+  filtered=folders;
   render();
 }
 
 
-// =====================================================
-// INICIO
-// =====================================================
-
+// ===============================
+//  IMPORTANTE: CARGA LOCAL PRIMERO
+// ===============================
+loadLocal();
 loadVaults();
