@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Folders</title>
+
+<style>
+
+/* GENERAL */
+body{
+  margin:0;
+  font-family:'Segoe UI';
+  background:#0f172a;
+  color:white;
+  padding:20px;
+}
+
+/* LOGO COMO DASHBOARD */
+.logo{
+  position:absolute;
+  top:15px;
+  left:20px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo-box{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#22c55e,#3b82f6);
+}
+
+.logo-text{
+  font-weight:600;
+  font-size:14px;
+  opacity:0.9;
+}
+
+/* BOTONES */
+.top-actions{
+  position:absolute;
+  top:15px;
+  right:20px;
+  display:flex;
+  gap:10px;
+}
+
+.btn{
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.btn-back{background:#64748b;}
+.btn-exit{background:#ef4444;}
+.btn-clear{background:#475569;}
+
+/* HEADER */
+.header{
+  text-align:center;
+  margin-top:20px;
+}
+
+/* CONTROLES */
+.controls{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:10px;
+}
+
+select,input{
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  background:#1e293b;
+  color:white;
+}
+
+/* TREE */
+.tree{margin-top:20px;}
+
+.node{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.node:hover{background:#1e293b;}
+
+.arrow{
+  width:15px;
+  transition:0.2s;
+}
+
+.arrow.open{transform:rotate(90deg);}
+
+.children{
+  margin-left:20px;
+  max-height:0;
+  overflow:hidden;
+  transition:max-height 0.3s ease;
+}
+
+.children.show{
+  max-height:500px;
+}
+
+.menu{
+  margin-left:auto;
+  cursor:pointer;
+}
+
+.editor{
+  margin-left:40px;
+  margin-top:5px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LOGO -->
+<div style="text-align:center;margin-bottom:10px;">
+   <img src="./assets/logo.jpeg" style="width:160px;">
+</div>
+
+<!-- BOTONES -->
+<div class="top-actions">
+  <button class="btn btn-back" onclick="goBack()">Volver</button>
+  <button class="btn btn-exit" onclick="exitApp()">Salir</button>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <h2>Folders</h2>
+</div>
+
+<!-- CONTROLES -->
+<div class="controls">
+  <select id="vaultSelect" onchange="loadFolders()"></select>
+  <input id="search" placeholder="Buscar..." onkeyup="filterFolders()">
+  <button class="btn btn-clear" onclick="clearSearch()">Limpiar</button>
+</div>
+
+<!-- TREE -->
+<div id="tree" class="tree"></div>
+
+<script src="folders.js"></script>
+
+</body>
+</html>

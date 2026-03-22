@@ -1,20 +1,30 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Expone funciones seguras al frontend
+/*
+  Este archivo actúa como una capa segura entre el frontend (renderer)
+  y el backend (main process), exponiendo únicamente funciones controladas
+  mediante el objeto global "window.api".
+
+  Se utiliza ipcRenderer.invoke para comunicación asincrónica segura.
+*/
+
 contextBridge.exposeInMainWorld('api', {
 
   /**
    * =====================================================
    * LOGIN
    * =====================================================
+   * Permite autenticar al usuario en el sistema
    */
   login: (username, password) =>
     ipcRenderer.invoke('login', username, password),
+
 
   /**
    * =====================================================
    * USERS
    * =====================================================
+   * Gestión completa de usuarios del sistema
    */
   getUsersFull: (showInactive = false) =>
     ipcRenderer.invoke('users:get', showInactive),
@@ -34,18 +44,22 @@ contextBridge.exposeInMainWorld('api', {
   updateUserPassword: (id, pass) =>
     ipcRenderer.invoke('updateUserPassword', id, pass),
 
+
   /**
    * =====================================================
-   * MFA
+   * MFA (MULTI FACTOR AUTHENTICATION)
    * =====================================================
+   * Validación de códigos de verificación
    */
   verifyCode: (code) =>
     ipcRenderer.invoke('verify-code', code),
+
 
   /**
    * =====================================================
    * CREDENCIALES
    * =====================================================
+   * Gestión de credenciales dentro de los vaults
    */
   listCredentials: (vaultId) =>
     ipcRenderer.invoke('list-credentials', vaultId),
@@ -68,10 +82,12 @@ contextBridge.exposeInMainWorld('api', {
   copyToClipboard: (text) =>
     ipcRenderer.invoke("copy-to-clipboard", text),
 
+
   /**
    * =====================================================
    * PASSWORD
    * =====================================================
+   * Recuperación y restablecimiento de contraseñas
    */
   recoverPassword: (userInput) =>
     ipcRenderer.invoke('recover-password', userInput),
@@ -79,10 +95,12 @@ contextBridge.exposeInMainWorld('api', {
   resetPassword: (password) =>
     ipcRenderer.invoke('reset-password', password),
 
+
   /**
    * =====================================================
    * VAULTS
    * =====================================================
+   * Gestión de bóvedas seguras
    */
   getVaults: () =>
     ipcRenderer.invoke('vaults:get'),
@@ -96,12 +114,34 @@ contextBridge.exposeInMainWorld('api', {
   deleteVault: (id) =>
     ipcRenderer.invoke('vaults:delete', id),
 
+
   /**
    * =====================================================
-   * AUDIT LOGS (ESTA ES LA CORRECCIÓN)
+   * AUDIT LOGS
    * =====================================================
+   * Obtención de registros de auditoría del sistema
    */
   getAuditLogs: () =>
-    ipcRenderer.invoke('audit:get')
+    ipcRenderer.invoke('audit:get'),
+
+
+  /**
+   * =====================================================
+   * FOLDERS
+   * =====================================================
+   * Gestión de carpetas dentro de cada vault
+   * Este módulo permite organizar las credenciales
+   */
+  getFoldersByVault: (vaultId) =>
+    ipcRenderer.invoke('folders:get', vaultId),
+
+  createFolder: (data) =>
+    ipcRenderer.invoke('folders:create', data),
+
+  updateFolder: (data) =>
+    ipcRenderer.invoke('folders:update', data),
+
+  deleteFolder: (id) =>
+    ipcRenderer.invoke('folders:delete', id)
 
 });

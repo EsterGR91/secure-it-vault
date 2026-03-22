@@ -21,6 +21,15 @@ const userService = require('./services/user.service');
 const vaultService = require('./services/vault.service');
 const credentialsService = require('./services/credentials.service');
 
+/**
+ * =====================================================
+ * NUEVO: SERVICIO DE FOLDERS
+ * =====================================================
+ * Este servicio gestiona la lógica de negocio de carpetas
+ * sin afectar otros módulos existentes.
+ */
+const folderService = require('./services/folders.service');
+
 
 // ===============================
 // UTILIDADES
@@ -253,7 +262,7 @@ ipcMain.handle("copy-to-clipboard", (_, text) => {
 
 
 // ===============================
-// AUDITORÍA (MEJORA SEGURA)
+// AUDITORÍA
 // ===============================
 ipcMain.handle('audit:get', async () => {
 
@@ -261,7 +270,7 @@ ipcMain.handle('audit:get', async () => {
 
     const logs = await auditRepo.getAuditLogs();
 
-    console.log("Logs enviados al frontend:", logs); // debug controlado
+    console.log("Logs enviados al frontend:", logs);
 
     return logs || [];
 
@@ -270,7 +279,73 @@ ipcMain.handle('audit:get', async () => {
     console.error("Error en audit:get:", error);
 
     return []; 
+  }
+});
 
+
+// ===============================
+// FOLDERS (NUEVO MÓDULO)
+// ===============================
+ipcMain.handle('folders:get', async (e, vaultId) => {
+
+  try {
+
+    if (!currentUserId) return [];
+
+    return await folderService.getFoldersByVault(vaultId);
+
+  } catch (error) {
+
+    console.error("Error folders:get:", error);
+    return [];
+  }
+});
+
+
+ipcMain.handle('folders:create', async (e, data) => {
+
+  try {
+
+    if (!currentUserId) throw new Error("No session");
+
+    return await folderService.createFolder(data, currentUserId);
+
+  } catch (error) {
+
+    console.error("Error folders:create:", error);
+    throw error;
+  }
+});
+
+
+ipcMain.handle('folders:update', async (e, data) => {
+
+  try {
+
+    if (!currentUserId) throw new Error("No session");
+
+    return await folderService.updateFolder(data.id, data, currentUserId);
+
+  } catch (error) {
+
+    console.error("Error folders:update:", error);
+    throw error;
+  }
+});
+
+
+ipcMain.handle('folders:delete', async (e, id) => {
+
+  try {
+
+    if (!currentUserId) throw new Error("No session");
+
+    return await folderService.deleteFolder(id, currentUserId);
+
+  } catch (error) {
+
+    console.error("Error folders:delete:", error);
+    throw error;
   }
 });
 
