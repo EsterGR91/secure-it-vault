@@ -1,20 +1,28 @@
 // ===============================
-// Variable global donde almaceno los logs cargados
+// VARIABLES GLOBALES
 // ===============================
+
+// Lista completa de logs obtenidos desde backend
 let logs = [];
 
+// Lista filtrada (buscador + filtros)
+let filteredLogs = [];
+
+// Control de paginación
+let currentPage = 1;
+const pageSize = 10;
+
 
 // ===============================
-// Navega de regreso al dashboard
+// NAVEGACIÓN
 // ===============================
+
+// Regresa al dashboard principal
 function goBack(){
   window.location.href = "dashboard.html";
 }
 
-
-// ===============================
 // Cierra la aplicación
-// ===============================
 function exitApp(){
   window.close();
 }
@@ -27,113 +35,206 @@ async function loadLogs(){
 
   try{
 
-    // Solicito los registros de auditoría mediante IPC
+    // Obtiene logs mediante IPC
     logs = await window.api.getAuditLogs();
 
-    // DEBUG: verificar que el campo correcto es "user"
-    console.log("Logs cargados:", logs);
+    // Inicialmente se muestran todos
+    filteredLogs = logs;
 
-    // Renderizo la lista completa
-    render(logs);
+    // Render inicial
+    render();
+    renderChart();
 
   }catch(error){
 
-    // Si ocurre un error, lo muestro en consola
-    console.error("Error audit:", error);
+    console.error("Error cargando auditoría:", error);
   }
 }
 
 
 // ===============================
-// RENDERIZAR TABLA
+// RENDER TABLA + PAGINACIÓN
 // ===============================
-function render(list){
+function render(){
 
   const table = document.getElementById("table");
-
-  // Uso DocumentFragment para evitar múltiples renders (optimización)
-  const fragment = document.createDocumentFragment();
-
-  list.forEach(l => {
-
-    const row = document.createElement("tr");
-
-    // IMPORTANTE:
-    // Antes usaba l.username → incorrecto
-    // Ahora uso l.user → viene desde el SQL (COALESCE)
-    row.innerHTML = `
-      <td>${l.user || "Sistema"}</td>
-      <td>${l.action}</td>
-      <td>${l.target}</td>
-      <td>${l.ip_address}</td>
-      <td>${formatDate(l.created_at)}</td>
-    `;
-
-    fragment.appendChild(row);
-  });
-
-  // Limpio la tabla antes de insertar
   table.innerHTML = "";
 
-  // Inserto todo de una vez (más rápido)
-  table.appendChild(fragment);
+  // Calculo de registros por página
+  const start = (currentPage - 1) * pageSize;
+  const pageData = filteredLogs.slice(start, start + pageSize);
+
+  pageData.forEach(l => {
+
+    // Badge de usuario (Sistema o usuario real)
+    let userHTML = (!l.user || l.user === "Sistema")
+      ? `<span class="badge-user badge-system">Sistema</span>`
+      : `<span class="badge-user badge-real">${l.user}</span>`;
+
+    // Color según tipo de acción
+    let actionClass = "";
+    if(l.action.includes("CREATE")) actionClass = "action-create";
+    else if(l.action.includes("DELETE")) actionClass = "action-delete";
+    else if(l.action.includes("UPDATE")) actionClass = "action-update";
+
+    // Construcción de fila
+    const row = `
+      <tr>
+        <td>${userHTML}</td>
+        <td class="${actionClass}">${l.action}</td>
+        <td>${l.target}</td>
+        <td>${l.ip_address}</td>
+        <td>${new Date(l.created_at).toLocaleString("es-CR")}</td>
+      </tr>
+    `;
+
+    table.innerHTML += row;
+  });
+
+  // Renderiza paginación
+  renderPagination();
 }
 
 
 // ===============================
-// FORMATEAR FECHA
+// PAGINACIÓN
 // ===============================
-function formatDate(date){
+function renderPagination(){
 
-  // Formato local Costa Rica
-  return new Date(date).toLocaleString("es-CR");
+  const totalPages = Math.ceil(filteredLogs.length / pageSize);
+  const container = document.getElementById("pagination");
+
+  container.innerHTML = "";
+
+  for(let i = 1; i <= totalPages; i++){
+
+    container.innerHTML += `
+      <button 
+        class="${i === currentPage ? 'active' : ''}"
+        onclick="changePage(${i})">
+        ${i}
+      </button>
+    `;
+  }
+}
+
+// Cambia de página
+function changePage(page){
+  currentPage = page;
+  render();
 }
 
 
 // ===============================
-// BUSCADOR OPTIMIZADO (SIN LAG)
+// FILTROS + BUSCADOR
 // ===============================
-let searchTimeout;
+function applyFilters(){
 
-function filterLogs(){
+  const text = document.getElementById("search").value.toLowerCase();
+  const action = document.getElementById("filterAction").value;
 
-  // Cancelo ejecución anterior si el usuario sigue escribiendo
-  clearTimeout(searchTimeout);
+  // Filtrado combinado
+  filteredLogs = logs.filter(l => {
 
-  searchTimeout = setTimeout(() => {
-
-    const text = document.getElementById("search").value.toLowerCase();
-
-    // Si está vacío → mostrar todo
-    if(!text){
-      render(logs);
-      return;
-    }
-
-    // IMPORTANTE:
-    // Antes filtrabas por username → incorrecto
-    // Ahora uso user → correcto
-    const filtered = logs.filter(l =>
+    const matchText =
       (l.user || "").toLowerCase().includes(text) ||
-      l.action.toLowerCase().includes(text) ||
-      l.target.toLowerCase().includes(text)
-    );
+      l.target.toLowerCase().includes(text);
 
-    render(filtered);
+    const matchAction =
+      !action || l.action.includes(action);
 
-  }, 120); // bajé a 120ms para respuesta más fluida sin lag
+    return matchText && matchAction;
+  });
+
+  // Reinicio paginación
+  currentPage = 1;
+
+  render();
 }
 
 
 // ===============================
-// LIMPIAR BUSCADOR
+// LIMPIAR BUSCADOR + FILTROS
 // ===============================
 function clearSearch(){
 
+  // Limpio input de búsqueda
   document.getElementById("search").value = "";
 
-  // Renderizo todo nuevamente
-  render(logs);
+  // Limpio filtro
+  document.getElementById("filterAction").value = "";
+
+  // Restauro datos originales
+  filteredLogs = logs;
+
+  // Reinicio paginación
+  currentPage = 1;
+
+  render();
+}
+
+
+// ===============================
+// EXPORTAR CSV (COMPATIBLE EXCEL)
+// ===============================
+function exportCSV(){
+
+  // Si no hay datos
+  if(!filteredLogs || filteredLogs.length === 0){
+    alert("No hay datos para exportar");
+    return;
+  }
+
+  let csv = "User,Action,Target,IP,Fecha\n";
+
+  // Exporta SOLO lo filtrado (mejor UX)
+  filteredLogs.forEach(l => {
+
+    const user = l.user || "Sistema";
+    const date = new Date(l.created_at).toLocaleString("es-CR");
+
+    csv += `"${user}","${l.action}","${l.target}","${l.ip_address}","${date}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "audit_logs.csv";
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+
+// ===============================
+// GRÁFICO DE ACTIVIDAD
+// ===============================
+function renderChart(){
+
+  const counts = { CREATE:0, UPDATE:0, DELETE:0 };
+
+  // Conteo por tipo de acción
+  logs.forEach(l => {
+
+    if(l.action.includes("CREATE")) counts.CREATE++;
+    else if(l.action.includes("UPDATE")) counts.UPDATE++;
+    else if(l.action.includes("DELETE")) counts.DELETE++;
+  });
+
+  // Render gráfico con Chart.js
+  new Chart(document.getElementById("chart"), {
+    type: "bar",
+    data: {
+      labels: ["CREATE","UPDATE","DELETE"],
+      datasets: [{
+        label: "Eventos",
+        data: [counts.CREATE, counts.UPDATE, counts.DELETE]
+      }]
+    }
+  });
 }
 
 

@@ -5,7 +5,7 @@
 <!-- Permite el uso de caracteres especiales -->
 
 <title>Audit Logs</title>
-<!-- Módulo para visualizar los registros de auditoría -->
+<!-- Módulo de visualización de auditoría del sistema -->
 
 <style>
 
@@ -15,22 +15,22 @@
 
 body{
   margin:0;
-  font-family:'Segoe UI';        /* Fuente principal del sistema */
-  background:#0f172a;            /* Fondo oscuro corporativo */
+  font-family:'Segoe UI';
+  background:#0f172a;
   color:white;
   padding:30px;
 }
 
 /* =========================
-   HEADER CENTRADO
+   HEADER
 ========================= */
 
 .header-center{
-  text-align:center;             /* Centra logo y título */
+  text-align:center;
 }
 
 .header-center img{
-  width:140px;                   /* Tamaño del logo */
+  width:140px;
   margin-bottom:15px;
 }
 
@@ -39,7 +39,7 @@ body{
 ========================= */
 
 .top-actions{
-  position:absolute;             /* Posiciona botones en la esquina superior */
+  position:absolute;
   top:20px;
   right:20px;
   display:flex;
@@ -52,18 +52,42 @@ body{
   border-radius:10px;
   cursor:pointer;
   font-weight:600;
+  transition:0.2s;
 }
 
-.btn-back{background:#64748b;color:white;}   /* Botón volver */
-.btn-exit{background:#ef4444;color:white;}   /* Botón salir */
-.btn-clear{background:#475569;color:white;}  /* Botón limpiar búsqueda */
+.btn:hover{
+  opacity:0.8;
+}
+
+.btn-back{background:#64748b;color:white;}
+.btn-clear{background:#475569;color:white;}
+.btn-exit{background:#ef4444;color:white;}
+.btn-export{background:#22c55e;color:white;} /* Botón exportar */
+
+/* =========================
+   FILTROS
+========================= */
+
+.filters{
+  display:flex;
+  justify-content:center;
+  margin-top:10px;
+}
+
+select{
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  background:#1e293b;
+  color:white;
+}
 
 /* =========================
    BUSCADOR
 ========================= */
 
 .search-box{
-  margin:20px auto;
+  margin:15px auto;
   width:300px;
 }
 
@@ -77,7 +101,7 @@ body{
 }
 
 /* =========================
-   TABLA DE LOGS
+   TABLA
 ========================= */
 
 table{
@@ -94,10 +118,73 @@ th,td{
 tr{
   background:#1e293b;
   border-bottom:1px solid rgba(255,255,255,0.05);
+  transition:0.2s;
 }
 
 tr:hover{
-  background:#334155;            /* Resaltado al pasar el mouse */
+  background:#334155;
+}
+
+/* =========================
+   BADGE USER
+========================= */
+
+.badge-user{
+  padding:4px 10px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:600;
+  background:#22c55e;
+}
+
+.badge-system{
+  background:#64748b;
+}
+
+/* =========================
+   COLORES POR ACCIÓN
+========================= */
+
+.action-create{color:#22c55e;font-weight:bold;}
+.action-update{color:#3b82f6;font-weight:bold;}
+.action-delete{color:#ef4444;font-weight:bold;}
+
+/* =========================
+   PAGINACIÓN
+========================= */
+
+.pagination{
+  display:flex;
+  justify-content:center;
+  margin-top:20px;
+  gap:5px;
+}
+
+.page-btn{
+  background:#1e293b;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.page-btn:hover{
+  background:#334155;
+}
+
+.active{
+  background:#22c55e;
+}
+
+/* =========================
+   GRÁFICO
+========================= */
+
+canvas{
+  background:#1e293b;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 0 10px rgba(0,0,0,0.4);
+  margin-top:30px;
 }
 
 </style>
@@ -112,6 +199,7 @@ tr:hover{
 <div class="top-actions">
   <button class="btn btn-back" onclick="goBack()">Volver</button>
   <button class="btn btn-clear" onclick="clearSearch()">Limpiar</button>
+  <button class="btn btn-export" onclick="exportCSV()">Exportar</button>
   <button class="btn btn-exit" onclick="exitApp()">Salir</button>
 </div>
 
@@ -125,16 +213,28 @@ tr:hover{
 </div>
 
 <!-- =========================
+     FILTRO POR ACCIÓN
+========================= -->
+
+<div class="filters">
+  <select id="filterAction" onchange="applyFilters()">
+    <option value="">Todas</option>
+    <option value="CREATE">CREATE</option>
+    <option value="UPDATE">UPDATE</option>
+    <option value="DELETE">DELETE</option>
+  </select>
+</div>
+
+<!-- =========================
      BUSCADOR
 ========================= -->
 
 <div class="search-box">
-  <!-- Filtro dinámico -->
-  <input id="search" placeholder="Buscar..." onkeyup="filterLogs()">
+  <input id="search" placeholder="Buscar..." onkeyup="applyFilters()">
 </div>
 
 <!-- =========================
-     TABLA DE AUDITORÍA
+     TABLA
 ========================= -->
 
 <table>
@@ -147,10 +247,23 @@ tr:hover{
 <th>Fecha</th>
 </tr>
 </thead>
+
 <tbody id="table"></tbody>
-<!-- Aquí se renderizan dinámicamente los logs desde audit.js -->
 </table>
 
+<!-- =========================
+     PAGINACIÓN
+========================= -->
+
+<div class="pagination" id="pagination"></div>
+
+<!-- =========================
+     GRÁFICO
+========================= -->
+
+<canvas id="chart" height="100"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="audit.js"></script>
 
 </body>
