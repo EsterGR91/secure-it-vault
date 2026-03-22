@@ -121,6 +121,9 @@ updateCredential: (id, data) =>
 deleteCredential: (id) =>
   ipcRenderer.invoke('credentials:delete', id),
 
+copyToClipboard: (text) =>
+  ipcRenderer.invoke("copy-to-clipboard", text),
+
   /**
    * =====================================================
    * VAULTS (NUEVO - SOLO ESTO SE AGREGÓ)

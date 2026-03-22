@@ -9,13 +9,10 @@ let editingId = null;
 // ===============================
 // NAVEGACIÓN
 // ===============================
-
-// voy correctamente al dashboard
 function goBack(){
   window.location.href = "dashboard.html";
 }
 
-// cerrar app
 function exitApp(){
   window.close();
 }
@@ -25,40 +22,34 @@ function exitApp(){
 // MOSTRAR / OCULTAR PASSWORD
 // ===============================
 function togglePassword(){
-
   const input = document.getElementById("password");
-
   input.type = input.type === "password" ? "text" : "password";
 }
 
 
 // ===============================
-// CARGAR DATOS (SIN LAG + CON USUARIO)
+// CARGAR DATOS COMPLETOS (SIN LAG)
 // ===============================
 async function loadCredentials(){
 
   try{
 
-    // traigo lista básica (rápido)
     const data = await window.api.getCredentials(currentVault);
-
     credentials = data || [];
 
-    // render inmediato (evita lag visual)
     render(credentials);
 
-    // ahora en paralelo traigo los detalles (usuario real)
     const fullData = await Promise.all(
       credentials.map(c => window.api.getCredential(c.id))
     );
 
-    // combino datos sin tocar backend
     credentials = credentials.map((c, i) => ({
       ...c,
-      username: fullData[i]?.username || "Usuario no definido"
+      username: fullData[i]?.username || "Usuario no definido",
+      password: fullData[i]?.password || null,
+      url: fullData[i]?.url || ""
     }));
 
-    // render final con username correcto
     render(credentials);
 
   }catch(error){
@@ -68,11 +59,15 @@ async function loadCredentials(){
 
 
 // ===============================
-// RENDER OPTIMIZADO
+// RENDER OPTIMIZADO (NO TOCAR)
 // ===============================
 function render(list){
 
   const container = document.getElementById("list");
+
+  // optimización: evitar render innecesario si está vacío
+  if(!container) return;
+
   container.innerHTML = "";
 
   const fragment = document.createDocumentFragment();
@@ -93,7 +88,7 @@ function render(list){
 
       <div class="actions">
         <button onclick="view(${c.id})">Ver</button>
-        <button onclick="copyPassword('${c.password || ""}')">Copiar</button>
+        <button onclick="copyPassword(${c.id})">Copiar</button>
         <button onclick="startEdit(${c.id})">Editar</button>
         <button onclick="deleteCredential(${c.id})">Eliminar</button>
       </div>
@@ -116,7 +111,32 @@ function formatDate(date){
 
 
 // ===============================
-// CREAR
+// INICIAR EDICIÓN
+// ===============================
+async function startEdit(id){
+
+  editingId = id;
+
+  const data = credentials.find(c => c.id === id);
+
+  if(!data){
+    showToast("Error cargando credencial");
+    return;
+  }
+
+  document.getElementById("title").value = data.title || "";
+  document.getElementById("username").value = data.username || "";
+  document.getElementById("password").value = data.password || "";
+  document.getElementById("url").value = data.url || "";
+
+  document.getElementById("title").focus();
+
+  showToast("Modo edición activado");
+}
+
+
+// ===============================
+// CREAR / ACTUALIZAR
 // ===============================
 async function createCredential(){
 
@@ -124,7 +144,6 @@ async function createCredential(){
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
 
-  // validación obligatoria
   if(!title || !username || !password){
     showToast("Completa los campos obligatorios");
     return;
@@ -140,7 +159,17 @@ async function createCredential(){
     notes: ""
   };
 
-  await window.api.createCredential(data);
+  if(editingId){
+
+    await window.api.updateCredential(editingId, data);
+    showToast("Credencial actualizada");
+    editingId = null;
+
+  }else{
+
+    await window.api.createCredential(data);
+    showToast("Credencial creada");
+  }
 
   await loadCredentials();
   clearForm();
@@ -156,6 +185,8 @@ function clearForm(){
   document.getElementById("username").value = "";
   document.getElementById("password").value = "";
   document.getElementById("url").value = "";
+
+  editingId = null;
 
   document.getElementById("title").focus();
 }
@@ -175,11 +206,16 @@ async function deleteCredential(id){
 
 
 // ===============================
-// MODAL BONITO (NO CONGELA)
+// MODAL
 // ===============================
-async function view(id){
+function view(id){
 
-  const data = await window.api.getCredential(id);
+  const data = credentials.find(c => c.id === id);
+
+  if(!data){
+    showToast("No se pudo obtener la credencial");
+    return;
+  }
 
   const overlay = document.createElement("div");
 
@@ -188,11 +224,10 @@ async function view(id){
   overlay.style.left = 0;
   overlay.style.width = "100%";
   overlay.style.height = "100%";
-  overlay.style.background = "rgba(0,0,0,0.6)";
+  overlay.style.background = "rgba(0,0,0,0.7)";
   overlay.style.display = "flex";
   overlay.style.justifyContent = "center";
   overlay.style.alignItems = "center";
-  overlay.onclick = () => overlay.remove();
 
   const modal = document.createElement("div");
 
@@ -200,20 +235,15 @@ async function view(id){
   modal.style.padding = "25px";
   modal.style.borderRadius = "12px";
   modal.style.width = "350px";
-  modal.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
-
-  modal.onclick = (e) => e.stopPropagation();
 
   modal.innerHTML = `
-    <h3>${data.title || ""}</h3>
-    <p><b>Usuario:</b> ${data.username || "Sin usuario"}</p>
-    <p><b>Password:</b> ${data.password || "********"}</p>
-    <p><b>URL:</b> ${data.url || ""}</p>
+    <h3>${data.title}</h3>
+    <p><b>Usuario:</b> ${data.username}</p>
+    <p><b>Password:</b> ${data.password}</p>
+    <p><b>URL:</b> ${data.url}</p>
     <br>
-    <button onclick="this.closest('.overlay').remove()">Cerrar</button>
+    <button onclick="this.parentElement.parentElement.remove()">Cerrar</button>
   `;
-
-  overlay.classList.add("overlay");
 
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
@@ -221,24 +251,39 @@ async function view(id){
 
 
 // ===============================
-// COPIAR PASSWORD (COMPATIBLE ELECTRON)
+// COPIAR PASSWORD
 // ===============================
-function copyPassword(password){
+async function copyPassword(id){
 
-  const input = document.createElement("input");
-  input.value = password;
+  try{
 
-  document.body.appendChild(input);
-  input.select();
-  document.execCommand("copy");
-  document.body.removeChild(input);
+    const cred = credentials.find(c => c.id === id);
 
-  showToast("Contraseña copiada");
+    if(!cred){
+      showToast("No se encontró la credencial");
+      return;
+    }
+
+    if(!cred.password){
+      showToast("No hay contraseña disponible");
+      return;
+    }
+
+    await window.api.copyToClipboard(cred.password);
+
+    showToast("Contraseña copiada correctamente");
+
+  }catch(error){
+
+    console.error("Error copiando:", error);
+    showToast("Error al copiar");
+
+  }
 }
 
 
 // ===============================
-// TOAST BONITO
+// TOAST
 // ===============================
 function showToast(msg){
 
@@ -252,6 +297,7 @@ function showToast(msg){
   toast.style.padding = "12px 20px";
   toast.style.borderRadius = "10px";
   toast.style.fontWeight = "bold";
+  toast.style.boxShadow = "0 0 10px rgba(0,0,0,0.4)";
 
   document.body.appendChild(toast);
 
@@ -260,7 +306,7 @@ function showToast(msg){
 
 
 // ===============================
-// GENERADOR DE PASSWORD
+// GENERADOR
 // ===============================
 function generatePassword(){
 
@@ -279,29 +325,28 @@ function generatePassword(){
 
 
 // ===============================
-// BUSCADOR SIN LAG
+// BUSCADOR SIN LAG REAL
 // ===============================
-let searchTimeout;
-
 function filterCredentials(){
 
-  clearTimeout(searchTimeout);
+  const text = document.getElementById("search").value.toLowerCase();
 
-  searchTimeout = setTimeout(() => {
+  // si no hay texto → render normal
+  if(!text){
+    render(credentials);
+    return;
+  }
 
-    const text = document.getElementById("search").value.toLowerCase();
+  // filtro directo sin delay
+  const filtered = credentials.filter(c => {
 
-    const filtered = credentials.filter(c => {
+    const user = (c.username || "").toLowerCase();
+    const title = (c.title || "").toLowerCase();
 
-      const user = (c.username || "").toLowerCase();
-      const title = (c.title || "").toLowerCase();
+    return user.includes(text) || title.includes(text);
+  });
 
-      return user.includes(text) || title.includes(text);
-    });
-
-    render(filtered);
-
-  }, 200);
+  render(filtered);
 }
 
 

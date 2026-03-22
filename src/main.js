@@ -259,6 +259,16 @@ ipcMain.handle('credentials:delete', async (e, id) => {
 });
 
 
+// COPY CLIPBOARD CREDENTIALS
+const { clipboard } = require('electron');
+
+ipcMain.handle("copy-to-clipboard", (_, text) => {
+
+  clipboard.writeText(text);
+
+  return true;
+});3
+
 // ===============================
 // INICIO APP
 // ===============================
