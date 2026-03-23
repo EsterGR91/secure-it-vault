@@ -144,6 +144,32 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('folders:update', data),
 
   deleteFolder: (id) =>
-    ipcRenderer.invoke('folders:delete', id)
+    ipcRenderer.invoke('folders:delete', id),
+
+
+
+
+// ===============================
+// DOCUMENTS - FUNCIONES EXPUESTAS AL FRONTEND
+// ===============================
+
+// Obtiene todos los documentos de un vault específico
+// Envía el vaultId al proceso principal mediante IPC
+getDocuments: (vaultId)=>
+  ipcRenderer.invoke('documents:get', vaultId),
+
+// Crea un nuevo documento
+// Envía al main los datos necesarios (vaultId, título, archivo, etc.)
+createDocument: (data)=>
+  ipcRenderer.invoke('documents:create', data),
+
+// Obtiene un documento específico por su ID
+getDocument: (id)=>
+  ipcRenderer.invoke('documents:getOne', id),
+
+// Elimina un documento por su ID
+// El proceso principal se encargará también de registrar auditoría
+deleteDocument: (id)=>
+  ipcRenderer.invoke('documents:delete', id),
 
 });

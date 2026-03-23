@@ -353,6 +353,56 @@ ipcMain.handle('folders:delete', async (e, id) => {
 
 });
 
+// Importo el servicio de documentos
+const docService = require('./services/documents.service');
+
+
+/* ======================================
+   LISTAR DOCUMENTOS POR VAULT
+====================================== */
+
+// Escucha cuando el frontend solicita los documentos de un vault
+ipcMain.handle('documents:get', (e, vaultId)=>{
+
+  // Llama al service para obtener la lista
+  return docService.getDocuments(vaultId);
+});
+
+
+/* ======================================
+   CREAR DOCUMENTO
+====================================== */
+
+// Escucha cuando el frontend quiere crear un nuevo documento
+ipcMain.handle('documents:create', (e, data)=>{
+
+  // Envía los datos al service junto con el usuario actual
+  return docService.createDocument(data, currentUserId);
+});
+
+
+/* ======================================
+   OBTENER DOCUMENTO POR ID
+====================================== */
+
+// Escucha cuando el frontend necesita un documento específico
+ipcMain.handle('documents:getOne', (e, id)=>{
+
+  return docService.getDocument(id);
+});
+
+
+/* ======================================
+   ELIMINAR DOCUMENTO
+====================================== */
+
+// Escucha cuando se solicita eliminar un documento
+ipcMain.handle('documents:delete', (e, id)=>{
+
+  // Se envía también el usuario actual para registrar auditoría
+  return docService.deleteDocument(id, currentUserId);
+});
+
 
 // ===============================
 // INICIO APP
