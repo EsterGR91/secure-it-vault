@@ -40,22 +40,28 @@ body{
   gap:10px;
 }
 
+/* =========================
+   BOTONES GENERALES
+========================= */
 .btn{
-  padding:10px 15px;
+  padding:10px 16px;
   border:none;
   border-radius:10px;
   cursor:pointer;
   font-weight:600;
-  transition:0.2s;
+  transition:all 0.2s ease;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
 }
 
 .btn:hover{
-  opacity:0.8;
+  transform:translateY(-2px);
+  box-shadow:0 6px 12px rgba(0,0,0,0.4);
 }
 
+/* COLORES */
+.btn-upload{background:#22c55e;color:white;}
 .btn-back{background:#64748b;color:white;}
 .btn-exit{background:#ef4444;color:white;}
-.btn-upload{background:#22c55e;color:white;}
 
 /* =========================
    FORMULARIO
@@ -74,6 +80,20 @@ input{
   border-radius:10px;
   background:#1e293b;
   color:white;
+}
+
+/* =========================
+   BUSCADOR
+========================= */
+.search-box{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:15px;
+}
+
+.search-box input{
+  width:250px;
 }
 
 /* =========================
@@ -118,20 +138,37 @@ input{
 .actions button{
   border:none;
   border-radius:8px;
-  padding:6px 12px;
+  padding:6px 14px;
   cursor:pointer;
   font-size:12px;
+  transition:0.2s;
 }
 
-.actions button:nth-child(1){background:#3b82f6;color:white;}
-.actions button:nth-child(2){background:#ef4444;color:white;}
+.actions button:nth-child(1){
+  background:#3b82f6;
+  color:white;
+}
+
+.actions button:nth-child(2){
+  background:#ef4444;
+  color:white;
+}
+
+.actions button:hover{
+  transform:scale(1.05);
+}
+
+.actions button:nth-child(2){
+  background:#10b981;
+  color:white;
+}
 
 </style>
 </head>
 
 <body>
 
-<!-- BOTONES -->
+<!-- BOTONES SUPERIORES -->
 <div class="top-actions">
   <button class="btn btn-back" onclick="goBack()">Volver</button>
   <button class="btn btn-exit" onclick="exitApp()">Salir</button>
@@ -151,6 +188,21 @@ input{
 
   <button class="btn btn-upload" onclick="upload()">
     Subir
+  </button>
+
+</div>
+
+<!-- BUSCADOR (AHORA BIEN UBICADO) -->
+<div class="search-box">
+
+  <input 
+    id="search"
+    placeholder="Buscar documento..."
+    oninput="filterDocs()"
+  >
+
+  <button class="btn btn-back" onclick="clearSearch()">
+    Limpiar
   </button>
 
 </div>
