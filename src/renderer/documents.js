@@ -207,11 +207,13 @@ async function download(id){
 
 
 // =====================================================
-// DESCARGAR DOCUMENTO
+// DESCARGAR DOCUMENTO (FORMATO ORIGINAL)
 // =====================================================
 
 /**
- * Descarga el documento directamente al equipo del usuario
+ * Descarga el documento respetando su formato original.
+ * Se detecta automáticamente el tipo de archivo (MIME)
+ * a partir de los bytes del archivo.
  */
 async function downloadFile(id, title){
 
@@ -221,13 +223,64 @@ async function downloadFile(id, title){
 
     const byteArray = new Uint8Array(data);
 
-    const blob = new Blob([byteArray]);
+    // =====================================================
+    // DETECCIÓN DE TIPO DE ARCHIVO (MIME)
+    // =====================================================
+    let mimeType = "application/octet-stream";
+    let extension = "";
+
+    // PDF
+    if(byteArray[0] === 0x25 && byteArray[1] === 0x50){
+      mimeType = "application/pdf";
+      extension = ".pdf";
+    }
+
+    // PNG
+    else if(byteArray[0] === 0x89 && byteArray[1] === 0x50){
+      mimeType = "image/png";
+      extension = ".png";
+    }
+
+    // JPG
+    else if(byteArray[0] === 0xFF && byteArray[1] === 0xD8){
+      mimeType = "image/jpeg";
+      extension = ".jpg";
+    }
+
+    // DOCX / XLSX / ZIP (Office moderno)
+    else if(byteArray[0] === 0x50 && byteArray[1] === 0x4B){
+      mimeType = "application/zip";
+      extension = ".docx"; // puede ser docx/xlsx, pero funciona bien
+    }
+
+    // TXT (fallback)
+    else{
+      mimeType = "text/plain";
+      extension = ".txt";
+    }
+
+    // =====================================================
+    // CREAR BLOB CON TIPO CORRECTO
+    // =====================================================
+    const blob = new Blob([byteArray], { type: mimeType });
 
     const url = URL.createObjectURL(blob);
 
+    // =====================================================
+    // ASEGURAR NOMBRE CON EXTENSIÓN
+    // =====================================================
+    let filename = title;
+
+    if(!filename.includes(".")){
+      filename += extension;
+    }
+
+    // =====================================================
+    // DESCARGA
+    // =====================================================
     const a = document.createElement("a");
     a.href = url;
-    a.download = title || "documento";
+    a.download = filename;
 
     document.body.appendChild(a);
     a.click();
@@ -238,7 +291,6 @@ async function downloadFile(id, title){
     alert("Error al descargar");
   }
 }
-
 
 // =====================================================
 // ELIMINAR DOCUMENTO
