@@ -36,17 +36,11 @@ body{
   margin:20px 0 30px 0;
 }
 
-
 .logo-container img{
   height:80px;
   width:auto;
   opacity:0.95;
   object-fit:contain;
-}
-
-.logo-container span{
-  font-size:18px;
-  font-weight:600;
 }
 
 /* BOTONES */
@@ -89,7 +83,6 @@ body{
   padding-bottom:15px;
 }
 
-/* 👇 YA SIN LOGO AQUÍ */
 .header-left h1{
   margin:0;
 }
@@ -155,10 +148,10 @@ body{
 
   <div>
 
-    <!-- LOGO ( AQUÍ) -->
-   <div class="logo-container">
-  <img src="assets/logo.jpeg" alt="Logo">
-</div>
+    <!-- LOGO -->
+    <div class="logo-container">
+      <img src="assets/logo.jpeg" alt="Logo">
+    </div>
 
     <!-- MENÚ -->
     <button class="nav-btn" onclick="goTo('dashboard')">
@@ -201,7 +194,6 @@ body{
 <!-- ================= MAIN ================= -->
 <div class="main">
 
-  <!-- HEADER LIMPIO -->
   <div class="header">
     <div class="header-left">
       <h1>Dashboard</h1>
@@ -215,42 +207,36 @@ body{
     <div class="card">
       <i class="fa-solid fa-users"></i>
       <h3>Usuarios</h3>
-      <p>Gestiona usuarios, roles y accesos del sistema.</p>
       <button onclick="goTo('users')">Ingresar</button>
     </div>
 
     <div class="card">
       <i class="fa-solid fa-lock"></i>
       <h3>Vaults</h3>
-      <p>Administra bóvedas seguras de información.</p>
       <button onclick="goTo('vaults')">Ingresar</button>
     </div>
 
     <div class="card">
       <i class="fa-solid fa-key"></i>
       <h3>Credenciales</h3>
-      <p>Gestiona contraseñas cifradas y accesos.</p>
       <button onclick="goTo('credentials')">Ingresar</button>
     </div>
 
     <div class="card">
       <i class="fa-solid fa-folder"></i>
       <h3>Folders</h3>
-      <p>Organiza la información en carpetas.</p>
       <button onclick="goTo('folders')">Ingresar</button>
     </div>
 
     <div class="card">
       <i class="fa-solid fa-file"></i>
       <h3>Documentos</h3>
-      <p>Almacena archivos seguros.</p>
       <button onclick="goTo('documents')">Ingresar</button>
     </div>
 
     <div class="card">
       <i class="fa-solid fa-clipboard"></i>
       <h3>Auditoría</h3>
-      <p>Consulta el historial del sistema.</p>
       <button onclick="goTo('audit')">Ingresar</button>
     </div>
 
@@ -268,6 +254,58 @@ function logout(){
   localStorage.removeItem("user");
   window.location.href = "login.html";
 }
+
+</script>
+
+<script>
+
+/**
+ /**
+ * =====================================================
+ * CONTROL DE ROLES (USANDO BD REAL)
+ * =====================================================
+ */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  console.log("SCRIPT DE ROLES ACTIVADO");
+
+  let user = JSON.parse(localStorage.getItem("user"));
+
+  console.log("USER FINAL:", user);
+
+  // Validación básica
+  if (!user) return;
+
+  if (user.role === "user") {
+     
+    console.log("APLICANDO RESTRICCIONES");
+
+    // SIDEBAR
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+
+      const text = btn.innerText.toLowerCase();
+
+      if (!text.includes("credentials")) {
+        btn.style.display = "none";
+      }
+
+    });
+
+    // CARDS
+    document.querySelectorAll(".card").forEach(card => {
+
+      const text = card.innerText.toLowerCase();
+
+      if (!text.includes("credenciales") && !text.includes("credentials")) {
+        card.style.display = "none";
+      }
+
+    });
+
+  }
+
+});
 
 </script>
 

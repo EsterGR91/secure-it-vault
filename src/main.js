@@ -403,6 +403,13 @@ ipcMain.handle('documents:delete', (e, id)=>{
   return docService.deleteDocument(id, currentUserId);
 });
 
+// Maneja la solicitud para obtener un usuario por username
+ipcMain.handle('users:getByUsername', (e, username)=>{
+
+  // Llama al service y devuelve el resultado
+  return userService.getUserByUsername(username);
+});
+
 
 // ===============================
 // INICIO APP

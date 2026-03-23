@@ -28,11 +28,15 @@ async function createUser({ username, email, passwordHash, role = 'user' }) {
 // ===============================
 // BUSCAR USUARIO POR USERNAME
 // ===============================
+/**
+ * Obtiene un usuario activo desde la base de datos
+ * incluyendo todos sus atributos (role, password, etc.)
+ */
 async function findUserByUsername(username) {
 
-  // Solo usuarios activos
   const sql = `
-    SELECT * FROM users
+    SELECT *
+    FROM users
     WHERE username = ? AND is_active = 1
   `;
 
@@ -119,7 +123,7 @@ async function deleteUser(id) {
 
 
 // ===============================
-//  ACTIVAR / DESACTIVAR USUARIO (NUEVO)
+// ACTIVAR / DESACTIVAR USUARIO
 // ===============================
 async function toggleUser(id, state){
 
@@ -157,6 +161,10 @@ async function updatePassword(id, passwordHash){
 // ===============================
 // EXPORTACIONES
 // ===============================
+/**
+ * Se exportan únicamente las funciones necesarias.
+ * Se evita duplicidad eliminando métodos redundantes.
+ */
 module.exports = {
   createUser,
   findUserByUsername,
@@ -166,5 +174,5 @@ module.exports = {
   updateUser,
   deleteUser,
   getAllUsersRaw,
-  toggleUser //
+  toggleUser
 };

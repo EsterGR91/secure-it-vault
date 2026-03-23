@@ -155,6 +155,27 @@ async function updatePassword(id, password, currentUserId) {
   return true;
 }
 
+// ===============================
+// OBTENER USUARIO POR USERNAME (PARA ROLES)
+// ===============================
+/**
+ * Obtiene el usuario desde la base de datos
+ * incluyendo su rol, sin afectar el flujo de login.
+ */
+async function getUserByUsername(username){
+
+  const user = await userRepo.findUserByUsername(username);
+
+  if(!user){
+    return null;
+  }
+
+  return {
+    id: user.id,
+    username: user.username,
+    role: user.role
+  };
+}
 
 // ===============================
 // EXPORTS
@@ -165,5 +186,6 @@ module.exports = {
   updateUser,
   getUsers,
   deleteUser,
-  updatePassword
+  updatePassword,
+  getUserByUsername
 };

@@ -2,8 +2,6 @@
  * =====================================================
  * CONTROL DE INTENTOS FALLIDOS POR USUARIO (ANTI FUERZA BRUTA)
  * =====================================================
- * Se utiliza un objeto en localStorage para manejar
- * intentos independientes por cada usuario.
  */
 
 let loginAttempts = JSON.parse(localStorage.getItem("loginAttempts")) || {};
@@ -12,16 +10,13 @@ let loginAttempts = JSON.parse(localStorage.getItem("loginAttempts")) || {};
 /**
  * =====================================================
  * FUNCIÓN LOGIN
- * Se ejecuta cuando el usuario presiona el botón Ingresar
  * =====================================================
  */
 
 async function login() {
 
-  // Obtiene valores del formulario
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
-
 
   // =====================================================
   // VALIDACIÓN DE CAMPOS VACÍOS
@@ -36,7 +31,6 @@ async function login() {
 
   }
 
-
   // =====================================================
   // OBTENER DATOS DEL USUARIO (INTENTOS)
   // =====================================================
@@ -46,9 +40,8 @@ async function login() {
     lockUntil: null
   };
 
-
   // =====================================================
-  // VALIDACIÓN DE BLOQUEO SOLO PARA ESTE USUARIO
+  // VALIDACIÓN DE BLOQUEO
   // =====================================================
 
   if (userData.lockUntil && Date.now() < userData.lockUntil) {
@@ -62,22 +55,30 @@ async function login() {
 
   }
 
-
   try {
 
     // =====================================================
-    // ENVÍA CREDENCIALES AL BACKEND
+    // ENVÍO AL BACKEND
     // =====================================================
 
     const result = await window.api.login(username, password);
-
+    // Guardar username para usarlo después del MFA
+      localStorage.setItem("lastUser", username);
 
     if (result) {
 
       /**
        * =====================================================
-       * LOGIN CORRECTO
-       * - Se eliminan los intentos SOLO de este usuario
+       * GUARDAR USUARIO TEMPORAL PARA MFA
+       * =====================================================
+       * Se guarda SOLO el username
+       */
+
+      localStorage.setItem("lastUser", username);
+
+      /**
+       * =====================================================
+       * LIMPIAR INTENTOS
        * =====================================================
        */
 
@@ -87,7 +88,6 @@ async function login() {
         "loginAttempts",
         JSON.stringify(loginAttempts)
       );
-
 
       /**
        * =====================================================
@@ -103,20 +103,13 @@ async function login() {
 
     /**
      * =====================================================
-     * LOGIN FALLIDO (SOLO ESTE USUARIO)
+     * LOGIN FALLIDO
      * =====================================================
      */
 
     userData.attempts++;
 
-
     if (userData.attempts >= 3) {
-
-      /**
-       * =====================================================
-       * BLOQUEO POR 15 MINUTOS
-       * =====================================================
-       */
 
       userData.lockUntil = Date.now() + (15 * 60 * 1000);
 
@@ -125,22 +118,9 @@ async function login() {
 
     } else {
 
-      /**
-       * =====================================================
-       * MENSAJE DE ERROR NORMAL
-       * =====================================================
-       */
-
       document.getElementById("error").innerText =
         "Credenciales incorrectas (" + userData.attempts + "/3)";
     }
-
-
-    /**
-     * =====================================================
-     * GUARDAR CAMBIOS SOLO DE ESTE USUARIO
-     * =====================================================
-     */
 
     loginAttempts[username] = userData;
 
@@ -156,13 +136,12 @@ async function login() {
 
 /**
  * =====================================================
- * FUNCIÓN RECUPERAR CONTRASEÑA
+ * RECUPERAR CONTRASEÑA
  * =====================================================
  */
 
 function forgotPassword(){
 
-  // Redirige a pantalla de recuperación
   window.location.href = "recover-password.html";
 
 }

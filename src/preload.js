@@ -172,4 +172,8 @@ getDocument: (id)=>
 deleteDocument: (id)=>
   ipcRenderer.invoke('documents:delete', id),
 
+// Obtiene un usuario por username vía IPC
+getUserByUsername: (username) =>
+  ipcRenderer.invoke('users:getByUsername', username),
+
 });

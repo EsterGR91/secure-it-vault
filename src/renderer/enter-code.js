@@ -22,17 +22,17 @@ inputs.forEach((input, index) => {
 
   input.addEventListener("input", () => {
 
-    // Solo números
+    // Permitir solo números
     input.value = input.value.replace(/[^0-9]/g, "");
 
-    // Avanza al siguiente input
+    // Avanzar automáticamente al siguiente campo
     if (input.value && index < inputs.length - 1) {
       inputs[index + 1].focus();
     }
 
   });
 
-  // Permite borrar hacia atrás
+  // Permitir borrar hacia atrás con Backspace
   input.addEventListener("keydown", (e) => {
 
     if (e.key === "Backspace" && !input.value && index > 0) {
@@ -54,11 +54,12 @@ async function verifyCode() {
 
   let code = "";
 
-  // Une los 6 inputs OTP
+  // Construir código completo a partir de los inputs
   inputs.forEach(input => {
     code += input.value;
   });
 
+  // Validación de longitud
   if (code.length !== 6) {
 
     alert("Ingrese el código completo");
@@ -74,18 +75,52 @@ async function verifyCode() {
 
       /**
        * =====================================================
+       * OBTENER USERNAME DESDE LOGIN
+       * =====================================================
+       */
+      const username = localStorage.getItem("lastUser");
+
+
+      /**
+       * =====================================================
+       * OBTENER USUARIO REAL DESDE BD (ROL CORRECTO)
+       * =====================================================
+       * Aquí se consulta el backend para obtener el role real
+       */
+      const user = await window.api.getUserByUsername(username);
+
+
+      /**
+       * =====================================================
+       * VALIDACIÓN DE SEGURIDAD
+       * =====================================================
+       */
+      if (!user) {
+        alert("No se pudo obtener el usuario");
+        return;
+      }
+
+
+      /**
+       * =====================================================
+       * GUARDAR USUARIO FINAL (CON ROLE REAL)
+       * =====================================================
+       */
+      localStorage.setItem("user", JSON.stringify(user));
+
+
+      /**
+       * =====================================================
        * REDIRECCIÓN SEGÚN EL FLUJO
        * =====================================================
        */
 
       if(mode === "recovery"){
 
-        // Si viene de recuperar contraseña
         window.location.href = "reset-password.html";
 
       }else{
 
-        // Si viene de login normal
         window.location.href = "dashboard.html";
 
       }
@@ -98,7 +133,7 @@ async function verifyCode() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error("Error verificando código:", error);
     alert("Error verificando código");
 
   }
